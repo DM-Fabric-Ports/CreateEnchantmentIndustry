@@ -58,7 +58,7 @@ public class DisenchanterBlock extends Block implements IWrenchable, ITE<Disench
         if (heldItem.isEmpty())
             return InteractionResult.PASS;
         return onTileEntityUse(worldIn, pos, te -> {
-            ItemStack disenchanted = Disenchanting.disenchantAndInsert(te, heldItem, false);
+            ItemStack disenchanted = Disenchanting.disenchantAndInsert(te, heldItem);
             if (!ItemStack.matches(disenchanted, heldItem)) {
                 player.setItemInHand(handIn, disenchanted);
                 return InteractionResult.sidedSuccess(worldIn.isClientSide);

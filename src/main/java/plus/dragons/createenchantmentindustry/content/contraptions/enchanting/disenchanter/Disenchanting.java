@@ -25,7 +25,7 @@ public class Disenchanting {
 
     private static final RecipeWrapper WRAPPER = new RecipeWrapper(new ItemStackHandler(1));
 
-    public static ItemStack disenchantAndInsert(DisenchanterBlockEntity be, ItemStack itemStack, boolean simulate) {
+    public static ItemStack disenchantAndInsert(DisenchanterBlockEntity be, ItemStack itemStack) {
         Level level = be.getLevel();
         if (level == null)
             return itemStack;
@@ -39,19 +39,8 @@ public class Disenchanting {
                     long amount = recipe.getExperience();
                     var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(),
                             itemStack.getCount() * amount);
-                    long inserted = (!fluidStack.isEmpty())
-                            && fluidStack.isFluidEqual(tank.getPrimaryHandler().getResource())
-                                    ? (tank.getPrimaryHandler().getCapacity() - tank.getPrimaryHandler().getAmount())
-                                            / amount
-                                    : !fluidStack.isEmpty()
-                                            ? (tank.getPrimaryHandler().getCapacity()
-                                                    - tank.getPrimaryHandler().getAmount()) / amount
-                                            : 0;
+                    long inserted = TransferUtil.insertFluid(tank.getPrimaryHandler(), fluidStack) / amount;
                     ItemStack ret = itemStack.copy();
-                    if (!simulate) {
-                        fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), inserted * amount);
-                        TransferUtil.insertFluid(tank.getPrimaryHandler(), fluidStack);
-                    }
                     ret.shrink((int) inserted);
                     tank.forbidInsertion();
                     return ret;

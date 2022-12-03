@@ -29,7 +29,7 @@ public class DisenchanterItemHandler implements SingleSlotStorage<ItemVariant> {
         int amount = maxAmount > 64 ? 64 : (int) maxAmount;
         ItemStack stack = resource.toStack(amount);
 
-        ItemStack disenchanted = Disenchanting.disenchantAndInsert(be, stack, false);
+        ItemStack disenchanted = Disenchanting.disenchantAndInsert(be, stack);
         if (!ItemStack.matches(stack, disenchanted)) {
             return disenchanted.getCount();
         }

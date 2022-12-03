@@ -222,7 +222,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
                 }
             });
             if (sum.get() != 0) {
-                var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), sum.get());
+                var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), sum.get() * 81);
                 var inserted = TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidStack);
                 if (inserted != 0) {
                     for (var player : players) {
@@ -258,16 +258,16 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         if (!experienceOrbs.isEmpty()) {
             internalTank.allowInsertion();
             for (var orb : experienceOrbs) {
-                var amount = orb.value;
-                var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), amount * 81);
-                var inserted = TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidStack) / 81;
+                long amount = orb.value * 81L;
+                var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), amount);
+                var inserted = TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidStack);
                 if (inserted == amount) {
                     absorbedXp = true;
                     orb.remove(Entity.RemovalReason.DISCARDED);
                 } else {
                     if (inserted != 0) {
                         absorbedXp = true;
-                        orb.value = (int) (orb.value - inserted);
+                        orb.value = (int) (orb.value - (inserted / 81));
                     }
                     break;
                 }
@@ -330,7 +330,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         // Process finished
         heldItem.stack = result.getSecond();
         internalTank.allowInsertion();
-        TransferUtil.insertFluid(internalTank.getPrimaryHandler(), xp);
+        TransferUtil.insertFluid(internalTank.getPrimaryHandler(), xp.copy().setAmount(xp.getAmount() * 81));
         internalTank.forbidInsertion();
         level.levelEvent(1042, worldPosition, 0);
         notifyUpdate();
@@ -352,7 +352,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         if (!getHeldItemStack().isEmpty())
             return inserted;
 
-        ItemStack disenchanted = Disenchanting.disenchantAndInsert(this, transportedStack.stack, simulate);
+        ItemStack disenchanted = Disenchanting.disenchantAndInsert(this, transportedStack.stack);
         if (!ItemStack.matches(transportedStack.stack, disenchanted)) {
             return disenchanted;
         }
