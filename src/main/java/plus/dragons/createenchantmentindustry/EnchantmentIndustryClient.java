@@ -13,6 +13,7 @@ import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.en
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.ink.InkRenderingCamera;
 import plus.dragons.createenchantmentindustry.entry.CeiBlockPartials;
 import plus.dragons.createenchantmentindustry.entry.CeiEntityTypes;
+import plus.dragons.createenchantmentindustry.entry.CeiPackets;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
 import plus.dragons.createenchantmentindustry.foundation.ponder.content.CeiPonderIndex;
 
@@ -23,6 +24,7 @@ public class EnchantmentIndustryClient implements ClientModInitializer {
         CeiEntityTypes.registerClient();
         CeiBlockPartials.register();
         registerEvents();
+        CeiPackets.channel.initClientListener();
         CeiPonderIndex.register();
         CeiPonderIndex.registerTags();
 

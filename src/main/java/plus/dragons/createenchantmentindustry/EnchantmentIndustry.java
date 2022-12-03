@@ -51,6 +51,7 @@ public class EnchantmentIndustry implements ModInitializer, DataGeneratorEntrypo
         registerEvents();
         CeiAdvancements.register();
         CeiPackets.registerPackets();
+        CeiPackets.channel.initServerListener();
         CeiFluids.registerLavaReaction();
         OpenEndedPipeEffects.register();
         CeiBlockEntities.registerTransfer();

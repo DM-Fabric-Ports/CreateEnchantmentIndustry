@@ -77,24 +77,10 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
 		ItemStack heldItem = player.getItemInHand(hand);
-		if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND && player.getOffhandItem().isEmpty()) {
+		if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
 			if (!world.isClientSide && player instanceof ServerPlayer)
 				NetworkUtil.openGui((ServerPlayer) player, this, buf -> buf.writeItem(heldItem));
 			return InteractionResultHolder.success(heldItem);
-		} else if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
-			if (!world.isClientSide && player.getOffhandItem().getItem() instanceof EnchantedBookItem) {
-				if (player.getMainHandItem().getOrCreateTag().contains("target") && EnchantedBookItem.getEnchantments(player.getOffhandItem()).equals(EnchantedBookItem.getEnchantments(ItemStack.of((CompoundTag) Objects.requireNonNull(player.getMainHandItem().getTag().get("target")))))) {
-					int size = EnchantedBookItem.getEnchantments(ItemStack.of((CompoundTag) Objects.requireNonNull(player.getMainHandItem().getTag().get("target")))).size();
-					CompoundTag tag = heldItem.getOrCreateTag();
-					int index = tag.getInt("index");
-					tag.putInt("index", index == size - 1 ? 0 : index + 1);
-				} else {
-					CompoundTag tag = heldItem.getOrCreateTag();
-					tag.putInt("index", 0);
-					tag.put("target", player.getOffhandItem().save(new CompoundTag()));
-				}
-				player.getCooldowns().addCooldown(player.getMainHandItem().getItem(), 5);
-			}
 		}
 		return InteractionResultHolder.pass(heldItem);
 	}
