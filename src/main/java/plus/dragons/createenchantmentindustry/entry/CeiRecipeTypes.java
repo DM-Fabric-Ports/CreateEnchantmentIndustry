@@ -1,28 +1,27 @@
 package plus.dragons.createenchantmentindustry.entry;
 
+import java.util.Optional;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.Create;
 import com.simibubi.create.content.contraptions.processing.ProcessingRecipeBuilder;
 import com.simibubi.create.content.contraptions.processing.ProcessingRecipeSerializer;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.recipe.IRecipeTypeInfo;
+
+import io.github.fabricators_of_create.porting_lib.util.LazyRegistrar;
+import io.github.fabricators_of_create.porting_lib.util.RegistryObject;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createenchantmentindustry.EnchantmentIndustry;
 import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.disenchanter.DisenchantRecipe;
-
-import java.util.Optional;
-import java.util.function.Supplier;
 
 public enum CeiRecipeTypes implements IRecipeTypeInfo {
     DISENCHANTING(DisenchantRecipe::new);
@@ -55,10 +54,10 @@ public enum CeiRecipeTypes implements IRecipeTypeInfo {
         };
     }
 
-    public static void register(IEventBus modEventBus) {
-        ShapedRecipe.setCraftingSize(9, 9);
-        CeiRecipeTypes.Registers.SERIALIZER_REGISTER.register(modEventBus);
-        CeiRecipeTypes.Registers.TYPE_REGISTER.register(modEventBus);
+    public static void register() {
+        // ShapedRecipe.setCraftingSize(9, 9);
+        CeiRecipeTypes.Registers.SERIALIZER_REGISTER.register();
+        CeiRecipeTypes.Registers.TYPE_REGISTER.register();
     }
 
     public <C extends Container, T extends Recipe<C>> Optional<T> find(C inv, Level world) {
@@ -83,7 +82,7 @@ public enum CeiRecipeTypes implements IRecipeTypeInfo {
     }
 
     private static class Registers {
-        private static final DeferredRegister<RecipeSerializer<?>> SERIALIZER_REGISTER = DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, EnchantmentIndustry.ID);
-        private static final DeferredRegister<RecipeType<?>> TYPE_REGISTER = DeferredRegister.create(Registry.RECIPE_TYPE_REGISTRY, EnchantmentIndustry.ID);
+        private static final LazyRegistrar<RecipeSerializer<?>> SERIALIZER_REGISTER = LazyRegistrar.create(Registry.RECIPE_SERIALIZER, EnchantmentIndustry.ID);
+        private static final LazyRegistrar<RecipeType<?>> TYPE_REGISTER = LazyRegistrar.create(Registry.RECIPE_TYPE_REGISTRY, EnchantmentIndustry.ID);
     }
 }

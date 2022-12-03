@@ -1,5 +1,10 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.printer;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllShapes;
 import com.simibubi.create.content.contraptions.wrench.IWrenchable;
@@ -7,6 +12,7 @@ import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.block.ITE;
 import com.simibubi.create.foundation.tileEntity.ComparatorUtil;
 import com.simibubi.create.foundation.utility.VecHelper;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
@@ -27,28 +33,25 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.experience.ExperienceFluid;
 import plus.dragons.createenchantmentindustry.entry.CeiBlockEntities;
 import plus.dragons.createenchantmentindustry.entry.CeiBlocks;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@SuppressWarnings("deprecation")
 public class PrinterBlock extends Block implements IWrenchable, ITE<PrinterBlockEntity> {
     public PrinterBlock(Properties pProperties) {
         super(pProperties);
     }
 
     @Override
-    public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext pContext) {
+    public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos,
+            CollisionContext pContext) {
         return AllShapes.SPOUT;
     }
 
     @Override
-    public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
+    public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer,
+            ItemStack pStack) {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
         AdvancementBehaviour.setPlacedBy(pLevel, pPos, pPlacer);
     }
@@ -64,10 +67,10 @@ public class PrinterBlock extends Block implements IWrenchable, ITE<PrinterBlock
     public boolean canSurvive(BlockState state, LevelReader worldIn, BlockPos pos) {
         return !AllBlocks.BASIN.has(worldIn.getBlockState(pos.below()));
     }
-    
+
     @Override
     public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand,
-                                 BlockHitResult blockRayTraceResult) {
+            BlockHitResult blockRayTraceResult) {
         ItemStack heldItem = player.getItemInHand(hand);
 
         if (heldItem.isEmpty()) {
@@ -79,12 +82,14 @@ public class PrinterBlock extends Block implements IWrenchable, ITE<PrinterBlock
                     be.processingTicks = -1;
                     be.notifyUpdate();
                     return InteractionResult.SUCCESS;
-                } else return InteractionResult.PASS;
+                } else
+                    return InteractionResult.PASS;
             });
         } else if ((heldItem.is(Items.ENCHANTED_BOOK) || heldItem.is(Items.WRITTEN_BOOK)) && heldItem.getCount() == 1) {
             return onTileEntityUse(world, pos, be -> {
                 if (be.copyTarget == null) {
-                    if (!player.getAbilities().instabuild) player.setItemInHand(hand, ItemStack.EMPTY);
+                    if (!player.getAbilities().instabuild)
+                        player.setItemInHand(hand, ItemStack.EMPTY);
                 } else {
                     player.setItemInHand(hand, be.copyTarget);
                 }
@@ -105,11 +110,11 @@ public class PrinterBlock extends Block implements IWrenchable, ITE<PrinterBlock
         if (level instanceof ServerLevel serverLevel) {
             withTileEntityDo(level, pos, te -> {
                 ItemStack heldItemStack = te.copyTarget;
-                if(heldItemStack != null)
+                if (heldItemStack != null)
                     Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), heldItemStack);
                 var tank = te.tank.getPrimaryHandler();
                 var fluidStack = tank.getFluid();
-                if(fluidStack.getFluid() instanceof ExperienceFluid expFluid) {
+                if (fluidStack.getFluid() instanceof ExperienceFluid expFluid) {
                     expFluid.drop(serverLevel, VecHelper.getCenterOf(pos), fluidStack.getAmount());
                 }
             });

@@ -1,24 +1,19 @@
 package plus.dragons.createenchantmentindustry.entry;
 
-import com.google.common.collect.ImmutableMap;
+import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.REGISTRATE;
+
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllFluids;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
 import com.tterrag.registrate.util.entry.ItemEntry;
-import com.tterrag.registrate.util.entry.ItemProviderEntry;
-import net.minecraft.resources.ResourceLocation;
+
 import net.minecraft.world.item.Rarity;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.MissingMappingsEvent;
 import plus.dragons.createdragonlib.init.FillCreateItemGroupEvent;
-import plus.dragons.createenchantmentindustry.EnchantmentIndustry;
 import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter.EnchantingGuideItem;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.experience.ExperienceRotorItem;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.experience.HyperExperienceBottleItem;
-
-import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.REGISTRATE;
 
 public class CeiItems {
     
@@ -54,20 +49,20 @@ public class CeiItems {
         }
     }
     
-    public static void remap(MissingMappingsEvent event) {
-        var mappings = event.getMappings(ForgeRegistries.Keys.ITEMS, EnchantmentIndustry.ID);
-        var remaps = ImmutableMap.<ResourceLocation, ItemProviderEntry<?>>builder()
-            .put(EnchantmentIndustry.genRL("copier"), CeiBlocks.PRINTER)
-            .build();
-        for (var mapping : mappings) {
-            var key = mapping.getKey();
-            var remap = remaps.get(key);
-            if (remap != null) {
-                mapping.remap(remap.get().asItem());
-                EnchantmentIndustry.LOGGER.warn("Remapping item [{}] to [{}]...", key, remap.getId());
-            }
-        }
-    }
+    // public static void remap(MissingMappingsEvent event) {
+    //     var mappings = event.getMappings(ForgeRegistries.Keys.ITEMS, EnchantmentIndustry.ID);
+    //     var remaps = ImmutableMap.<ResourceLocation, ItemProviderEntry<?>>builder()
+    //         .put(EnchantmentIndustry.genRL("copier"), CeiBlocks.PRINTER)
+    //         .build();
+    //     for (var mapping : mappings) {
+    //         var key = mapping.getKey();
+    //         var remap = remaps.get(key);
+    //         if (remap != null) {
+    //             mapping.remap(remap.get().asItem());
+    //             EnchantmentIndustry.LOGGER.warn("Remapping item [{}] to [{}]...", key, remap.getId());
+    //         }
+    //     }
+    // }
 
     public static void register() {}
     

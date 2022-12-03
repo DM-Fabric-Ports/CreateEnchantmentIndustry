@@ -1,6 +1,16 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.disenchanter;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.foundation.utility.Pair;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.ItemStack;
@@ -8,16 +18,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createenchantmentindustry.entry.CeiFluids;
 import plus.dragons.createenchantmentindustry.entry.CeiRecipeTypes;
-
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Disenchanting {
 
@@ -34,15 +36,23 @@ public class Disenchanting {
                         return itemStack;
                     var tank = be.getInternalTank();
                     tank.allowInsertion();
-                    int amount = recipe.getExperience();
-                    var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), itemStack.getCount() * amount);
-                    int inserted = tank.getPrimaryHandler().fill(fluidStack, IFluidHandler.FluidAction.SIMULATE) / amount;
+                    long amount = recipe.getExperience();
+                    var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(),
+                            itemStack.getCount() * amount);
+                    long inserted = (!fluidStack.isEmpty())
+                            && fluidStack.isFluidEqual(tank.getPrimaryHandler().getResource())
+                                    ? (tank.getPrimaryHandler().getCapacity() - tank.getPrimaryHandler().getAmount())
+                                            / amount
+                                    : !fluidStack.isEmpty()
+                                            ? (tank.getPrimaryHandler().getCapacity()
+                                                    - tank.getPrimaryHandler().getAmount()) / amount
+                                            : 0;
                     ItemStack ret = itemStack.copy();
                     if (!simulate) {
                         fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), inserted * amount);
-                        tank.getPrimaryHandler().fill(fluidStack, IFluidHandler.FluidAction.EXECUTE);
+                        TransferUtil.insertFluid(tank.getPrimaryHandler(), fluidStack);
                     }
-                    ret.shrink(inserted);
+                    ret.shrink((int) inserted);
                     tank.forbidInsertion();
                     return ret;
                 }).orElse(itemStack);
@@ -52,9 +62,9 @@ public class Disenchanting {
     // stack always has count of 1.
     @Nullable
     public static Pair<FluidStack, ItemStack> disenchantResult(ItemStack itemStack, Level level) {
-        if (EnchantmentHelper.getEnchantments(itemStack).keySet().stream().anyMatch(enchantment -> !enchantment.isCurse())) {
-            var xp =
-                    new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), getDisenchantExperience(itemStack));
+        if (EnchantmentHelper.getEnchantments(itemStack).keySet().stream()
+                .anyMatch(enchantment -> !enchantment.isCurse())) {
+            var xp = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), getDisenchantExperience(itemStack));
             ItemStack result = disenchant(itemStack);
             return Pair.of(xp, result);
         }

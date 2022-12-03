@@ -1,5 +1,7 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter;
 
+import static plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter.BlazeEnchanterBlockEntity.ENCHANTING_TIME;
+
 import com.jozufozu.flywheel.core.PartialModel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -12,6 +14,7 @@ import com.simibubi.create.foundation.render.SuperByteBuffer;
 import com.simibubi.create.foundation.tileEntity.renderer.SmartTileEntityRenderer;
 import com.simibubi.create.foundation.utility.AngleHelper;
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.BookModel;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -25,16 +28,16 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.ForgeHooksClient;
 import plus.dragons.createenchantmentindustry.EnchantmentIndustry;
 import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter.BlazeEnchanterBlock.HeatLevel;
 
-import static plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter.BlazeEnchanterBlockEntity.ENCHANTING_TIME;
-
+@SuppressWarnings("")
 public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchanterBlockEntity> {
-    public static final Material BOOK_MATERIAL = ForgeHooksClient.getBlockMaterial(EnchantmentIndustry.genRL("block/blaze_enchanter_book"));
+    public static final Material BOOK_MATERIAL = new Material(InventoryMenu.BLOCK_ATLAS,
+            EnchantmentIndustry.genRL("block/blaze_enchanter_book"));
     private static final float PI = 3.14159265358979323846f;
     private final BookModel bookModel;
 
@@ -44,7 +47,8 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
     }
 
     @Override
-    protected void renderSafe(BlazeEnchanterBlockEntity be, float partialTicks, PoseStack ps, MultiBufferSource buffer, int light, int overlay) {
+    protected void renderSafe(BlazeEnchanterBlockEntity be, float partialTicks, PoseStack ps, MultiBufferSource buffer,
+            int light, int overlay) {
         super.renderSafe(be, partialTicks, ps, buffer, light, overlay);
         float horizontalAngle = AngleHelper.rad(be.headAngle.getValue(partialTicks));
         float animation = be.headAnimation.getValue(partialTicks) * .175f;
@@ -59,8 +63,8 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
     }
 
     protected void renderItem(BlazeEnchanterBlockEntity be,
-                              float partialTicks, float animation,
-                              PoseStack ps, MultiBufferSource buffer) {
+            float partialTicks, float animation,
+            PoseStack ps, MultiBufferSource buffer) {
         TransportedItemStack transported = be.heldItem;
         if (transported == null)
             return;
@@ -73,7 +77,8 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
         HeatLevel heatLevel = be.getBlockState().getValue(BlazeEnchanterBlock.HEAT_LEVEL);
         boolean active = be.processingTicks > 0 && be.processingTicks < 200;
         float renderTick = AnimationTickHolder.getRenderTime(be.getLevel()) + (be.hashCode() % 13) * 16f;
-        float beltOffset = horizontal ? Mth.lerp(partialTicks, transported.prevBeltPosition, transported.beltPosition) : .5f;
+        float beltOffset = horizontal ? Mth.lerp(partialTicks, transported.prevBeltPosition, transported.beltPosition)
+                : .5f;
         float movingProgress = Mth.sin((1 - 2 * Mth.abs(.5f - beltOffset)) * PI / 2);
         float verticalOffsetMult = heatLevel.isAtLeast(HeatLevel.KINDLED) ? 64 : 16;
         float verticalOffset = movingProgress * 5 / 8
@@ -102,14 +107,15 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
         ps.scale(0.5f, 0.5f, 0.5f);
 
         ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
-        itemRenderer.renderStatic(transported.stack, ItemTransforms.TransformType.FIXED, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, ps, buffer, 0);
+        itemRenderer.renderStatic(transported.stack, ItemTransforms.TransformType.FIXED, LightTexture.FULL_BRIGHT,
+                OverlayTexture.NO_OVERLAY, ps, buffer, 0);
 
         ps.popPose();
     }
 
     protected void renderBlaze(BlazeEnchanterBlockEntity be,
-                               float horizontalAngle, float animation,
-                               PoseStack ps, MultiBufferSource buffer) {
+            float horizontalAngle, float animation,
+            PoseStack ps, MultiBufferSource buffer) {
         BlockState blockState = be.getBlockState();
         HeatLevel heatLevel = blockState.getValue(BlazeEnchanterBlock.HEAT_LEVEL);
         boolean smouldering = heatLevel == HeatLevel.SMOULDERING;
@@ -138,7 +144,8 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
 
         if (be.goggles) {
             PartialModel gogglesModel = blazeModel == AllBlockPartials.BLAZE_INERT
-                    ? AllBlockPartials.BLAZE_GOGGLES_SMALL : AllBlockPartials.BLAZE_GOGGLES;
+                    ? AllBlockPartials.BLAZE_GOGGLES_SMALL
+                    : AllBlockPartials.BLAZE_GOGGLES;
 
             SuperByteBuffer gogglesBuffer = CachedBufferer.partial(gogglesModel, blockState);
             gogglesBuffer.translate(0, headY + 8 / 16f, 0);
@@ -167,8 +174,8 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
     }
 
     protected void renderBook(BlazeEnchanterBlockEntity be,
-                              float partialTicks, float horizontalAngle,
-                              PoseStack ps, MultiBufferSource buffer) {
+            float partialTicks, float horizontalAngle,
+            PoseStack ps, MultiBufferSource buffer) {
         ps.pushPose();
 
         ps.translate(0.5, 0.25, 0.5);
@@ -181,7 +188,8 @@ public class BlazeEnchanterRenderer extends SmartTileEntityRenderer<BlazeEnchant
         float page1 = Mth.frac(flip + 0.75f) * 1.6f - 0.3f;
         this.bookModel.setupAnim(time, Mth.clamp(page0, 0.0f, 1.0f), Mth.clamp(page1, 0.0f, 1.0f), 1);
         VertexConsumer vertexconsumer = BOOK_MATERIAL.buffer(buffer, RenderType::entitySolid);
-        this.bookModel.render(ps, vertexconsumer, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f, 1.0f);
+        this.bookModel.render(ps, vertexconsumer, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 1.0f, 1.0f, 1.0f,
+                1.0f);
 
         ps.popPose();
     }

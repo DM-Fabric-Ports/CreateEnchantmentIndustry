@@ -1,7 +1,15 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter;
 
+import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
+
 import com.google.common.collect.ImmutableList;
 import com.simibubi.create.foundation.gui.container.GhostItemContainer;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
+import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import net.fabricmc.api.EnvType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -13,12 +21,6 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
-
-import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
 
 public class EnchantingGuideMenu extends GhostItemContainer<ItemStack> {
     private static final Component NO_ENCHANTMENT = LANG.translate("gui.enchanting_guide.no_enchantment").component();
@@ -41,9 +43,9 @@ public class EnchantingGuideMenu extends GhostItemContainer<ItemStack> {
                     .entrySet()
                     .stream()
                     .map(entry -> entry.getKey().getFullname(entry.getValue()))
-                    .toArray(Component[]::new)
-            );
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                    .toArray(Component[]::new));
+
+        EnvExecutor.runWhenOn(EnvType.CLIENT, () -> () -> {
             if (Minecraft.getInstance().screen instanceof EnchantingGuideScreen screen) {
                 screen.updateScrollInput();
             }
@@ -85,7 +87,6 @@ public class EnchantingGuideMenu extends GhostItemContainer<ItemStack> {
     @Override
     protected void saveData(ItemStack contentHolder) {
     }
-
 
     class EnchantedBookSlot extends SlotItemHandler {
 
@@ -134,11 +135,11 @@ public class EnchantingGuideMenu extends GhostItemContainer<ItemStack> {
             ItemStack stackToInsert = playerInventory.getItem(index);
             if (getSlot(36).mayPlace(stackToInsert)) {
                 ItemStack copy = stackToInsert.copy();
-                ghostInventory.insertItem(0, copy, false);
+                TransferUtil.insertItem(ghostInventory, copy);
                 getSlot(36).setChanged();
             }
         } else {
-            ghostInventory.extractItem(0, 1, false);
+            TransferUtil.extractAnyItem(ghostInventory, 1);
             getSlot(index).setChanged();
         }
         return ItemStack.EMPTY;

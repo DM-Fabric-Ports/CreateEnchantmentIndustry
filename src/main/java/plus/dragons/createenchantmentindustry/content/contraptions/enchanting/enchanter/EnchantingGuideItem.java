@@ -1,8 +1,16 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter;
 
+import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
+
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerBlock;
 import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerTileEntity;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
+
+import io.github.fabricators_of_create.porting_lib.util.NetworkUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -20,16 +28,10 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkHooks;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createenchantmentindustry.entry.CeiBlocks;
 import plus.dragons.createenchantmentindustry.entry.CeiContainerTypes;
 import plus.dragons.createenchantmentindustry.entry.CeiItems;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
-
-import java.util.List;
-
-import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
 
 public class EnchantingGuideItem extends Item implements MenuProvider {
     public EnchantingGuideItem(Properties pProperties) {
@@ -41,6 +43,7 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
         return getDescription();
     }
 
+    @Override
     public InteractionResult useOn(UseOnContext pContext) {
         var level = pContext.getLevel();
         var player = pContext.getPlayer();
@@ -57,8 +60,8 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
                         blockEntity instanceof BlazeBurnerTileEntity) {
                     if (!level.isClientSide()) {
                         level.setBlockAndUpdate(blockPos, CeiBlocks.BLAZE_ENCHANTER.getDefaultState()
-                                .setValue(BlazeEnchanterBlock.FACING, level.getBlockState(blockPos).getValue(BlazeBurnerBlock.FACING))
-                        );
+                                .setValue(BlazeEnchanterBlock.FACING,
+                                        level.getBlockState(blockPos).getValue(BlazeBurnerBlock.FACING)));
                         if (level.getBlockEntity(blockPos) instanceof BlazeEnchanterBlockEntity tileEntity) {
                             var i = itemStack.copy();
                             i.setCount(1);
@@ -81,16 +84,15 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
         ItemStack heldItem = player.getItemInHand(hand);
         if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
             if (!world.isClientSide && player instanceof ServerPlayer)
-                NetworkHooks.openScreen((ServerPlayer) player, this, buf -> {
-                    buf.writeItem(heldItem);
-                });
+                NetworkUtil.openGui((ServerPlayer) player, this, buf -> buf.writeItem(heldItem));
             return InteractionResultHolder.success(heldItem);
         }
         return InteractionResultHolder.pass(heldItem);
     }
 
     @Override
-    public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
+    public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents,
+            TooltipFlag pIsAdvanced) {
         super.appendHoverText(pStack, pLevel, pTooltipComponents, pIsAdvanced);
         pTooltipComponents.add(LANG.translate("tooltip.guide_header").component());
         EnchantmentEntry enchantment = getEnchantment(pStack);
@@ -109,7 +111,8 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
     @Override
     public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
         ItemStack heldItem = pPlayer.getMainHandItem();
-        return new EnchantingGuideMenu(CeiContainerTypes.ENCHANTING_GUIDE_FOR_BLAZE.get(), pContainerId, pPlayerInventory, heldItem);
+        return new EnchantingGuideMenu(CeiContainerTypes.ENCHANTING_GUIDE_FOR_BLAZE.get(), pContainerId,
+                pPlayerInventory, heldItem);
     }
 
     @Nullable

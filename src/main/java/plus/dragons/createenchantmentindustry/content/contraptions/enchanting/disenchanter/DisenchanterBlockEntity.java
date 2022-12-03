@@ -1,5 +1,12 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.disenchanter;
 
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.contraptions.relays.belt.transport.TransportedItemStack;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
@@ -11,6 +18,14 @@ import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.foundation.utility.Iterate;
 import com.simibubi.create.foundation.utility.Pair;
 import com.simibubi.create.foundation.utility.VecHelper;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import io.github.fabricators_of_create.porting_lib.util.LazyOptional;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -26,25 +41,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createdragonlib.mixin.AdvancementBehaviourAccessor;
 import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter.Enchanting;
 import plus.dragons.createenchantmentindustry.entry.CeiFluids;
+import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiTriggers;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
-import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
-
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import plus.dragons.createenchantmentindustry.foundation.mixin.ExperienceOrbAccessor;
 
 public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGoggleInformation {
 
@@ -72,9 +75,10 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
     public void addBehaviours(List<TileEntityBehaviour> behaviours) {
         behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels()
                 .setInsertionHandler(this::tryInsertingFromSide));
-        behaviours.add(internalTank = SmartFluidTankBehaviour.single(this, CeiConfigs.SERVER.disenchanterTankCapacity.get())
-                .allowExtraction()
-                .forbidInsertion());
+        behaviours.add(
+                internalTank = SmartFluidTankBehaviour.single(this, CeiConfigs.SERVER.disenchanterTankCapacity.get())
+                        .allowExtraction()
+                        .forbidInsertion());
         registerAwardables(behaviours,
                 CeiAdvancements.EXPERIMENTAL.asCreateAdvancement(),
                 CeiAdvancements.GONE_WITH_THE_FOIL.asCreateAdvancement());
@@ -124,9 +128,12 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
 
             Direction side = heldItem.insertedFrom;
 
-            /* DirectBeltInputBehaviour#tryExportingToBeltFunnel(ItemStack, Direction, boolean) return null to
+            /*
+             * DirectBeltInputBehaviour#tryExportingToBeltFunnel(ItemStack, Direction,
+             * boolean) return null to
              * represent insertion is invalid due to invalidity
-             * of funnel (excludes funnel being powered) or something go wrong. */
+             * of funnel (excludes funnel being powered) or something go wrong.
+             */
             ItemStack tryExportingToBeltFunnel = getBehaviour(DirectBeltInputBehaviour.TYPE)
                     .tryExportingToBeltFunnel(heldItem.stack, side.getOpposite(), false);
             if (tryExportingToBeltFunnel != null) {
@@ -143,8 +150,8 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
             }
 
             BlockPos nextPosition = worldPosition.relative(side);
-            DirectBeltInputBehaviour directBeltInputBehaviour =
-                    TileEntityBehaviour.get(level, nextPosition, DirectBeltInputBehaviour.TYPE);
+            DirectBeltInputBehaviour directBeltInputBehaviour = TileEntityBehaviour.get(level, nextPosition,
+                    DirectBeltInputBehaviour.TYPE);
             if (directBeltInputBehaviour == null) {
                 if (!BlockHelper.hasBlockSolidSide(level.getBlockState(nextPosition), level, nextPosition,
                         side.getOpposite())) {
@@ -217,7 +224,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
             });
             if (sum.get() != 0) {
                 var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), sum.get());
-                var inserted = internalTank.getPrimaryHandler().fill(fluidStack, IFluidHandler.FluidAction.EXECUTE);
+                var inserted = TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidStack);
                 if (inserted != 0) {
                     for (var player : players) {
                         var total = getPlayerExperience(player);
@@ -232,7 +239,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
                             CeiAdvancements.SPIRIT_TAKING.getTrigger().trigger((ServerPlayer) player);
                         } else if (inserted > 0) {
                             if (total >= inserted) {
-                                player.giveExperiencePoints(-inserted);
+                                player.giveExperiencePoints((int) -inserted);
                                 inserted = 0;
                             } else {
                                 inserted -= total;
@@ -252,16 +259,16 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         if (!experienceOrbs.isEmpty()) {
             internalTank.allowInsertion();
             for (var orb : experienceOrbs) {
-                var amount = orb.value;
-                var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), amount);
-                var inserted = internalTank.getPrimaryHandler().fill(fluidStack, IFluidHandler.FluidAction.EXECUTE);
+                var amount = orb.getValue();
+                var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), amount * 81);
+                var inserted = TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidStack) / 81;
                 if (inserted == amount) {
                     absorbedXp = true;
                     orb.remove(Entity.RemovalReason.DISCARDED);
                 } else {
                     if (inserted != 0) {
                         absorbedXp = true;
-                        orb.value -= inserted;
+                        ((ExperienceOrbAccessor) orb).setValue((int) (orb.getValue() - inserted));
                     }
                     break;
                 }
@@ -281,7 +288,6 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         return Math.max(bar, 1);
     }
 
-
     protected boolean continueProcessing() {
         if (level.isClientSide && !isVirtual())
             return true;
@@ -295,8 +301,14 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
 
         if (processingTicks > 5) {
             internalTank.allowInsertion();
-            if (internalTank.getPrimaryHandler()
-                    .fill(xp, IFluidHandler.FluidAction.SIMULATE) != xp.getAmount()) {
+            if (((!xp.isEmpty())
+                    && xp.isFluidEqual(internalTank.getPrimaryHandler().getResource())
+                            ? internalTank.getPrimaryHandler().getCapacity()
+                                    - internalTank.getPrimaryHandler().getAmount()
+                            : !xp.isEmpty()
+                                    ? internalTank.getPrimaryHandler().getCapacity()
+                                            - internalTank.getPrimaryHandler().getAmount()
+                                    : 0) != xp.getAmount()) {
                 internalTank.forbidInsertion();
                 processingTicks = DISENCHANTER_TIME;
                 return true;
@@ -312,14 +324,14 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         var playerId = ((AdvancementBehaviourAccessor) advancementBehaviour).getPlayerId();
         if (playerId != null) {
             var player = level.getPlayerByUUID(playerId);
-            if(player!=null)
-                CeiTriggers.DISENCHANTED.trigger(player, xp.getAmount());
+            if (player != null)
+                CeiTriggers.DISENCHANTED.trigger(player, (int) xp.getAmount());
         }
 
         // Process finished
         heldItem.stack = result.getSecond();
         internalTank.allowInsertion();
-        internalTank.getPrimaryHandler().fill(xp, IFluidHandler.FluidAction.EXECUTE);
+        TransferUtil.insertFluid(internalTank.getPrimaryHandler(), xp);
         internalTank.forbidInsertion();
         level.levelEvent(1042, worldPosition, 0);
         notifyUpdate();
@@ -400,22 +412,22 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         super.read(compoundTag, clientPacket);
     }
 
-    @Override
-    @NotNull
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-        if (side != null && side.getAxis()
-                .isHorizontal() && isItemHandlerCap(capability))
-            return itemHandlers.get(side)
-                    .cast();
+    @Nullable
+    public static Storage<ItemVariant> getItemStorage(DisenchanterBlockEntity be, @Nullable Direction side) {
+        if (side != null && side.getAxis().isHorizontal() && be.itemHandlers.get(side).isPresent())
+            return be.itemHandlers.get(side).getValueUnsafer();
+        return null;
+    }
 
-        if ((side != Direction.UP) && isFluidHandlerCap(capability))
-            return internalTank.getCapability()
-                    .cast();
-        return super.getCapability(capability, side);
+    @Nullable
+    public static Storage<FluidVariant> getFluidStorage(DisenchanterBlockEntity be, @Nullable Direction side) {
+        if ((side != Direction.UP || side == null))
+            return be.internalTank.getCapability();
+        return null;
     }
 
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-        return containedFluidTooltip(tooltip, isPlayerSneaking, getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY));
+        return containedFluidTooltip(tooltip, isPlayerSneaking, getFluidStorage(this, null));
     }
 }

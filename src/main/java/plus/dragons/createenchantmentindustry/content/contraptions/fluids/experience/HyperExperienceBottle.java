@@ -19,11 +19,11 @@ public class HyperExperienceBottle extends ThrowableItemProjectile {
     }
 
     public HyperExperienceBottle(double pX, double pY, double pZ, Level pLevel) {
-        super(CeiEntityTypes.HYPER_EXPERIENCE_BOTTLE.get(), pX, pY, pZ, pLevel);
+        super(CeiEntityTypes.HYPER_EXPERIENCE_BOTTLE, pX, pY, pZ, pLevel);
     }
 
     public HyperExperienceBottle(LivingEntity pShooter, Level pLevel) {
-        super(CeiEntityTypes.HYPER_EXPERIENCE_BOTTLE.get(), pShooter, pLevel);
+        super(CeiEntityTypes.HYPER_EXPERIENCE_BOTTLE, pShooter, pLevel);
     }
 
 
@@ -32,15 +32,10 @@ public class HyperExperienceBottle extends ThrowableItemProjectile {
         return CeiItems.HYPER_EXP_BOTTLE.get();
     }
 
-    @SuppressWarnings("unchecked")
-    public static EntityType.Builder<?> build(EntityType.Builder<?> builder) {
-        EntityType.Builder<HyperExperienceBottle> entityBuilder = (EntityType.Builder<HyperExperienceBottle>) builder;
-        return entityBuilder.sized(.25f, .25f);
-    }
-
     /**
      * Gets the amount of gravity to apply to the thrown entity with each tick.
      */
+    @Override
     protected float getGravity() {
         return 0.07F;
     }
@@ -48,6 +43,7 @@ public class HyperExperienceBottle extends ThrowableItemProjectile {
     /**
      * Called when this EntityFireball hits a block or entity.
      */
+    @Override
     protected void onHit(HitResult pResult) {
         super.onHit(pResult);
         if (this.level instanceof ServerLevel) {

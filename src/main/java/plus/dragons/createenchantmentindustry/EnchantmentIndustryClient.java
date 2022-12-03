@@ -1,53 +1,41 @@
 package plus.dragons.createenchantmentindustry;
 
 import com.simibubi.create.foundation.config.ui.BaseConfigScreen;
-import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+
+import io.github.fabricators_of_create.porting_lib.event.client.FogEvents;
+import io.github.fabricators_of_create.porting_lib.event.client.ModelLoadCallback;
+import net.fabricmc.api.ClientModInitializer;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter.BlazeEnchanterRenderer;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.ink.InkRenderingCamera;
 import plus.dragons.createenchantmentindustry.entry.CeiBlockPartials;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
+import plus.dragons.createenchantmentindustry.foundation.mixin.ModelBakeryAccessor;
 import plus.dragons.createenchantmentindustry.foundation.ponder.content.CeiPonderIndex;
 
-public class EnchantmentIndustryClient {
+public class EnchantmentIndustryClient implements ClientModInitializer {
 
-    public EnchantmentIndustryClient() {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
-        //Have to do this here because flywheel lied about the init timing ;(
-        //Things won't work if you try init PartialModels in FMLClientSetupEvent
+    @Override
+    public void onInitializeClient() {
         CeiBlockPartials.register();
-        modEventBus.register(this);
-        registerForgeEvents(forgeEventBus);
-    }
-    
-    private void registerForgeEvents(IEventBus forgeEventBus) {
-        forgeEventBus.addListener(InkRenderingCamera::handleInkFogColor);
-    }
-
-    @SubscribeEvent
-    public void setup(final FMLClientSetupEvent event) {
+        registerEvents();
         CeiPonderIndex.register();
         CeiPonderIndex.registerTags();
-    }
-    
-    @SubscribeEvent
-    public void modelRegistry(final ModelEvent.RegisterAdditional event) {
-        ModelBakery.UNREFERENCED_TEXTURES.add(BlazeEnchanterRenderer.BOOK_MATERIAL);
-    }
-    
-    @SubscribeEvent
-    public void loadComplete(final FMLLoadCompleteEvent event) {
+
         BaseConfigScreen.setDefaultActionFor(EnchantmentIndustry.ID, screen -> screen
                 .withTitles(null, null, "Gameplay Settings")
-                .withSpecs(null, null, CeiConfigs.SERVER_SPEC)
-        );
+                .withSpecs(null, null, CeiConfigs.SERVER_SPEC));
+    }
+
+    private void registerEvents() {
+        FogEvents.SET_COLOR.register(InkRenderingCamera::handleInkFogColor);
+        ModelLoadCallback.EVENT.register(this::modelRegistry);
+    }
+
+    public void modelRegistry(ResourceManager manager, BlockColors colors, ProfilerFiller profiler, int mipLevel) {
+        ModelBakeryAccessor.getUnreferencedTextures().add(BlazeEnchanterRenderer.BOOK_MATERIAL);
     }
 
 }

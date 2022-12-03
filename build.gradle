@@ -1,220 +1,109 @@
+
 plugins {
-    id 'idea'
-    id 'net.minecraftforge.gradle'
-    id 'org.spongepowered.mixin'
-    id 'org.parchmentmc.librarian.forgegradle'
+    id 'fabric-loom' version '1.0.9'
     id 'maven-publish'
-    id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
 
-version = mod_version
-group = 'plus.dragons.createenchantmentindustry'
-archivesBaseName = "create_enchantment_industry-${artifact_minecraft_version}-for-create-${create_version}"
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-minecraft {
-    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
-
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg') // Currently, this location cannot be changed from the default.
-
-    runs {
-        client {
-            workingDirectory project.file('run')
-
-            arg '-mixin.config=create_enchantment_industry.mixins.json'
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            property 'forge.enabledGameTestNamespaces', 'create_enchantment_industry'
-
-            mods {
-                create_enchantment_industry {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run')
-
-            arg '-mixin.config=create_enchantment_industry.mixins.json'
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            property 'forge.enabledGameTestNamespaces', 'create_enchantment_industry'
-
-            mods {
-                create_enchantment_industry {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            args '--mod', 'create_enchantment_industry',
-                 '--all', '--output', file('src/generated/resources/'),
-                 '--existing', file('src/main/resources/'),
-                 '--existing-mod', 'create'
-
-            mods {
-                create_enchantment_industry {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
-}
-
-jarJar.enable()
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.maven_group
 
 repositories {
-    mavenLocal()
+    maven { url = "https://hephaestus.dev/release" }
+    maven { url = "https://api.modrinth.com/maven" }
+    maven { url = "https://cursemaven.com" }
+    maven { url = "https://maven.parchmentmc.org" }
+    maven { url = "https://maven.fabricmc.net/" }
+    maven { url = "https://maven.tterrag.com/" }
+    maven { url = "https://storage.googleapis.com/devan-maven/" }
+    maven { url = "https://maven.shedaniel.me/" }
+    maven { url = "https://aperlambda.github.io/maven" }
+    maven { url = "https://ladysnake.jfrog.io/artifactory/mods" }
+    maven { url = "https://maven.kotlindiscord.com/repository/terraformers/" }
+    maven { url = "https://mvn.devos.one/releases/" }
+    maven { url = "https://mvn.devos.one/snapshots/" }
+    maven { url = "https://maven.terraformersmc.com/" }
+    maven { url = "https://maven.cafeteria.dev/releases/" }
+    maven { url = "https://jitpack.io/" }
+    maven { url = "https://maven.gegy.dev" }
+    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    maven { url = "https://modmaven.dev" }
     maven {
-        name 'Tterrag Maven'
-        url 'https://maven.tterrag.com/'
-    }
-    maven {
-        name 'Progwml6 Maven'
-        url 'https://dvs1.progwml6.com/files/maven'
-    }
-    maven {
-        name 'Blamejared Maven'
-        url 'https://maven.blamejared.com'
-    }
-    maven {
-        name 'TheIllusiveC4 Maven'
-        url 'https://maven.theillusivec4.top/'
-    }
-    maven {
-        name 'DragonsPlus Maven'
-        url "https://maven.dragons.plus/Releases"
+        url = "https://maven.jamieswhiteshirt.com/libs-release"
+        content {
+            includeGroup("com.jamieswhiteshirt")
+        }
     }
 }
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings (loom.officialMojangMappings())
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    jarJar(group: 'plus.dragons.createdragonlib', name: "create_dragon_lib-${minecraft_version}", version: "${create_dragon_lib_version_range}") {
-        transitive = false
-        jarJar.pin(it, project.create_dragon_lib_version)
-    }
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    modImplementation "com.simibubi.create:create-fabric-1.19.2:${project.create_version}+${project.minecraft_version}"
+    modImplementation "com.github.DM-Fabric-Ports:CreateDragonLib:${project.dragon_lib_version}"
 
-    implementation fg.deobf("com.simibubi.create:create-${create_minecraft_version}:${create_version}-${create_version_build}:slim") { transitive = false }
-    implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${flywheel_minecraft_version}:${flywheel_version}")
-    implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
-
-    implementation fg.deobf("plus.dragons.createdragonlib:create_dragon_lib-${minecraft_version}:${create_dragon_lib_version}")
-
-    compileOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
-    compileOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-forge-api:${jei_version}")
-    implementation fg.deobf("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
-
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_minecraft_version}-${curios_version}:api")
-    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_minecraft_version}-${curios_version}")
-
-    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+    modCompileOnlyApi("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    modCompileOnlyApi("mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}")
+    // at runtime, use the full JEI jar for Fabric
+    modRuntimeOnly("mezz.jei:jei-${minecraft_version}-fabric:${jei_version}")
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+processResources {
+    inputs.property "version", project.version
 
-mixin {
-    add sourceSets.main, 'create_enchantment_industry.refmap.json'
-    config 'create_enchantment_industry.mixins.json'
-
-    debug.verbose = true
-    debug.export = true
-}
-
-jar {
-    classifier = 'slim'
-    manifest {
-        attributes([
-                "Specification-Title"     : "create_enchantment_industry",
-                "Specification-Vendor"    : "dragonsplus",
-                "Specification-Version"   : "1", // We are version 1 of ourselves
-                "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : "dragonsplus",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs': 'create_enchantment_industry.mixins.json'
-        ])
-    }
-}
-
-void addLicense(jarTask) {
-    jarTask.from('LICENSE')
-}
-
-jar.finalizedBy('reobfJar')
-addLicense(jar)
-
-tasks.jarJar.setClassifier('')
-tasks.jarJar.finalizedBy('reobfJarJar')
-addLicense(tasks.jarJar)
-
-curseforge {
-    if (System.getenv('CURSEFORGE_API_KEY') != null && project.hasProperty('cf_project_id')) {
-        apiKey = System.getenv("CURSEFORGE_API_KEY")
-        project {
-            id = project.cf_project_id
-            releaseType = project.cf_release_type
-            if (project.hasProperty('cf_game_versions')) {
-                def gameVersions = project.cf_game_versions.split(", ")
-                gameVersions.each { String gameVersion ->
-                    addGameVersion gameVersion
-                }
-            }
-            if (project.hasProperty('cf_java_versions')) {
-                def gameVersions = project.cf_java_versions.split(", ")
-                gameVersions.each { String gameVersion ->
-                    addGameVersion gameVersion
-                }
-            }
-            addGameVersion project.cf_modloader
-            mainArtifact(tasks.jarJar) {
-                displayName = "CEI ${mod_version} for Create ${artifact_minecraft_version}-${create_version}"
-                relations {
-                    if(project.hasProperty('cf_required_dependencies')) {
-                        project.cf_required_dependencies.split(", ").each { String slug ->
-                            requiredDependency slug
-                        }
-                    }
-                }
-            }
-            changelog = file("${projectDir}/changelog/${mod_version}.md")
-            changelogType = 'markdown'
-        }
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = archivesBaseName
-
-            fg.component(it)
-            jarJar.component(it)
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
+    // Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
+    it.options.release = 17
+}
+
+java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
+}
+
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archivesBaseName}"}
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs += [
+                    'src/generated/resources'
+            ]
+        }
+    }
+}
+
+// configure the maven publication
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+        // Notice: This block does NOT have the same function as the block in the top level.
+        // The repositories here will be used for publishing your artifact, not for
+        // retrieving dependencies.
+    }
 }

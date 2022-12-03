@@ -1,11 +1,18 @@
 package plus.dragons.createenchantmentindustry.entry;
 
+import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.REGISTRATE;
+
+import java.util.Arrays;
+import java.util.Locale;
+
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.ItemBuilder;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateItemTagsProvider;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
+
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
@@ -13,20 +20,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.tags.ITagManager;
 import plus.dragons.createenchantmentindustry.EnchantmentIndustry;
 
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Objects;
-
-import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.REGISTRATE;
-
 public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
-    ITagManager<Block> BLOCK_TAGS = Objects.requireNonNull(ForgeRegistries.BLOCKS.tags());
-    ITagManager<Item> ITEM_TAGS = Objects.requireNonNull(ForgeRegistries.ITEMS.tags());
-    ITagManager<Fluid> FLUID_TAGS = Objects.requireNonNull(ForgeRegistries.FLUIDS.tags());
     String FORGE = "forge";
     String CREATE = "create";
 
@@ -35,19 +31,20 @@ public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
     boolean hasDatagen();
 
     default void datagen(P pov) {
-        //NO-OP
+        // NO-OP
     }
 
     static String toTagName(String enumName) {
         return enumName.replace('$', '/').toLowerCase(Locale.ROOT);
     }
 
-    static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(String namespace, String... paths) {
+    static <T extends Block, P> NonNullFunction<BlockBuilder<T, P>, ItemBuilder<BlockItem, BlockBuilder<T, P>>> tagBlockAndItem(
+            String namespace, String... paths) {
         return block -> {
             ItemBuilder<BlockItem, BlockBuilder<T, P>> item = block.item();
             for (String path : paths) {
-                block.tag(BLOCK_TAGS.createTagKey(new ResourceLocation(namespace, path)));
-                item.tag(ITEM_TAGS.createTagKey(new ResourceLocation(namespace, path)));
+                block.tag(TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(namespace, path)));
+                item.tag(TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(namespace, path)));
             }
             return item;
         };
@@ -72,7 +69,7 @@ public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
         final boolean datagen;
 
         BlockTag(String namespace, boolean datagen) {
-            this.tag = BLOCK_TAGS.createTagKey(new ResourceLocation(namespace, toTagName(name())));
+            this.tag = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(namespace, toTagName(name())));
             this.datagen = datagen;
         }
 
@@ -109,7 +106,7 @@ public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
         final boolean datagen;
 
         ItemTag(String namespace, boolean datagen) {
-            this.tag = ITEM_TAGS.createTagKey(new ResourceLocation(namespace, toTagName(name())));
+            this.tag = TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(namespace, toTagName(name())));
             this.datagen = datagen;
         }
 
@@ -129,7 +126,7 @@ public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
     }
 
     enum FluidTag implements CeiTags<Fluid, RegistrateTagsProvider<Fluid>> {
-        //No experience fluid tag here as different ratios is not acceptable
+        // No experience fluid tag here as different ratios is not acceptable
         INK(FORGE, false),
         BLAZE_ENCHANTER_INPUT(false),
         PRINTER_INPUT(true) {
@@ -138,12 +135,12 @@ public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
                 pov.tag(tag).addTag(INK.tag);
             }
         };
-        
+
         final TagKey<Fluid> tag;
         final boolean datagen;
 
         FluidTag(String namespace, boolean datagen) {
-            this.tag = FLUID_TAGS.createTagKey(new ResourceLocation(namespace, toTagName(name())));
+            this.tag = TagKey.create(Registry.FLUID_REGISTRY, new ResourceLocation(namespace, toTagName(name())));
             this.datagen = datagen;
         }
 

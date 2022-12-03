@@ -6,18 +6,21 @@
   "refmap": "create_enchantment_industry.refmap.json",
   "mixins": [
     "BasinBlockMixin",
+    "BlockGetterMixin",
     "DeployerFakePlayerMixin",
+    "ExperienceOrbAccessor",
     "FluidTankBlockMixin",
     "ItemDrainBlockMixin",
     "ItemDrainTileEntityAccessor",
-    "OpenEndedPipeInvoker",
+    "OpenEndedPipeAccessor",
     "OpenEndFluidHandlerMixin",
     "SpoutBlockMixin",
     "SpoutTileEntityAccessor",
     "TankSegmentAccessor"
   ],
   "client": [
-    "CameraMixin"
+    "CameraMixin",
+    "ModelBakeryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,5 +1,14 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter;
 
+import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
+
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerBlock;
@@ -8,8 +17,19 @@ import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
 import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.belt.DirectBeltInputBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.fluid.SmartFluidTankBehaviour;
-import com.simibubi.create.foundation.utility.*;
+import com.simibubi.create.foundation.utility.AngleHelper;
+import com.simibubi.create.foundation.utility.BlockHelper;
+import com.simibubi.create.foundation.utility.Iterate;
+import com.simibubi.create.foundation.utility.Pair;
+import com.simibubi.create.foundation.utility.VecHelper;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import io.github.fabricators_of_create.porting_lib.util.LazyOptional;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -30,30 +50,16 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.FilteringFluidTankBehaviour;
 import plus.dragons.createenchantmentindustry.entry.CeiFluids;
 import plus.dragons.createenchantmentindustry.entry.CeiTags;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
 
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
-
 public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveGoggleInformation {
 
     public static final int ENCHANTING_TIME = 200;
-    SmartFluidTankBehaviour internalTank;
+    public SmartFluidTankBehaviour internalTank;
     TransportedItemStack heldItem;
     ItemStack targetItem = ItemStack.EMPTY;
     int processingTicks;
@@ -79,19 +85,19 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
         headAngle = LerpedFloat.angular();
         headAngle.startWithValue((AngleHelper
                 .horizontalAngle(state.getOptionalValue(BlazeEnchanterBlock.FACING)
-                        .orElse(Direction.SOUTH)) + 180) % 360
-        );
+                        .orElse(Direction.SOUTH))
+                + 180) % 360);
         goggles = false;
     }
 
     @Override
-    @SuppressWarnings("deprecation") //Fluid Tags are still useful for mod interaction
+    @SuppressWarnings("deprecation") // Fluid Tags are still useful for mod interaction
     public void addBehaviours(List<TileEntityBehaviour> behaviours) {
         behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels()
                 .setInsertionHandler(this::tryInsertingFromSide));
         behaviours.add(internalTank = FilteringFluidTankBehaviour
-                .single(fluidStack -> fluidStack.getFluid().is(CeiTags.FluidTag.BLAZE_ENCHANTER_INPUT.tag()),
-                    this, CeiConfigs.SERVER.blazeEnchanterTankCapacity.get())
+                .single((variant, amount) -> variant.getFluid().is(CeiTags.FluidTag.BLAZE_ENCHANTER_INPUT.tag()),
+                        this, CeiConfigs.SERVER.blazeEnchanterTankCapacity.get())
                 .whenFluidUpdates(() -> {
                     var fluid = internalTank.getPrimaryHandler().getFluid().getFluid();
                     if (CeiFluids.EXPERIENCE.is(fluid))
@@ -120,7 +126,8 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
 
         if (EnchantingGuideItem.getEnchantment(targetItem) == null) {
             if (!onClient) {
-                level.setBlockAndUpdate(getBlockPos(), AllBlocks.BLAZE_BURNER.getDefaultState().setValue(BlazeBurnerBlock.HEAT_LEVEL, BlazeBurnerBlock.HeatLevel.SMOULDERING));
+                level.setBlockAndUpdate(getBlockPos(), AllBlocks.BLAZE_BURNER.getDefaultState()
+                        .setValue(BlazeBurnerBlock.HEAT_LEVEL, BlazeBurnerBlock.HeatLevel.SMOULDERING));
                 return;
             }
         }
@@ -129,7 +136,6 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
             processingTicks = 0;
             return;
         }
-
 
         if (processingTicks > 0) {
             heldItem.prevBeltPosition = .5f;
@@ -160,9 +166,12 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
 
             Direction side = heldItem.insertedFrom;
 
-            /* DirectBeltInputBehaviour#tryExportingToBeltFunnel(ItemStack, Direction, boolean) return null to
+            /*
+             * DirectBeltInputBehaviour#tryExportingToBeltFunnel(ItemStack, Direction,
+             * boolean) return null to
              * represent insertion is invalid due to invalidity
-             * of funnel (excludes funnel being powered) or something go wrong. */
+             * of funnel (excludes funnel being powered) or something go wrong.
+             */
             ItemStack tryExportingToBeltFunnel = getBehaviour(DirectBeltInputBehaviour.TYPE)
                     .tryExportingToBeltFunnel(heldItem.stack, side.getOpposite(), false);
             if (tryExportingToBeltFunnel != null) {
@@ -179,8 +188,8 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
             }
 
             BlockPos nextPosition = worldPosition.relative(side);
-            DirectBeltInputBehaviour directBeltInputBehaviour =
-                    TileEntityBehaviour.get(level, nextPosition, DirectBeltInputBehaviour.TYPE);
+            DirectBeltInputBehaviour directBeltInputBehaviour = TileEntityBehaviour.get(level, nextPosition,
+                    DirectBeltInputBehaviour.TYPE);
             if (directBeltInputBehaviour == null) {
                 if (!BlockHelper.hasBlockSolidSide(level.getBlockState(nextPosition), level, nextPosition,
                         side.getOpposite())) {
@@ -238,6 +247,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
 
     }
 
+    @SuppressWarnings("unchecked")
     protected void blazeTick() {
         boolean active = processingTicks > 0;
 
@@ -308,9 +318,9 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
 
         double yMotion = empty ? .0625f : r.nextDouble() * .0125f;
         Vec3 v2 = c.add(VecHelper.offsetRandomly(Vec3.ZERO, r, .5f)
-                        .multiply(1, .25f, 1)
-                        .normalize()
-                        .scale((empty ? .25f : .5) + r.nextDouble() * .125f))
+                .multiply(1, .25f, 1)
+                .normalize()
+                .scale((empty ? .25f : .5) + r.nextDouble() * .125f))
                 .add(0, .5, 0);
 
         if (heatLevel.isAtLeast(BlazeEnchanterBlock.HeatLevel.SEETHING)) {
@@ -333,13 +343,15 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
             m = new Vec3(m.x, Math.abs(m.y), m.z);
             level.addAlwaysVisibleParticle(particle, vec.x, vec.y, vec.z, m.x, m.y, m.z);
         }
-        level.playLocalSound(vec.x, vec.y, vec.z, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1f, level.random.nextFloat() * .1f + .9f, true);
+        level.playLocalSound(vec.x, vec.y, vec.z, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1f,
+                level.random.nextFloat() * .1f + .9f, true);
     }
 
     protected boolean continueProcessing() {
         if (level.isClientSide && !isVirtual()) {
             if (processingTicks > 0 && processingTicks < 200 && level.getGameTime() % 80L == 0L)
-                ((ClientLevel) level).playLocalSound(worldPosition, SoundEvents.BEACON_AMBIENT, SoundSource.BLOCKS, 1.0f, 1.0f, true);
+                ((ClientLevel) level).playLocalSound(worldPosition, SoundEvents.BEACON_AMBIENT, SoundSource.BLOCKS,
+                        1.0f, 1.0f, true);
             return true;
         }
         if (processingTicks < 5)
@@ -353,8 +365,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
         FluidStack exp = new FluidStack(hyper
                 ? CeiFluids.HYPER_EXPERIENCE.get().getSource()
                 : CeiFluids.EXPERIENCE.get().getSource(),
-                Enchanting.getExperienceConsumption(entry.getFirst(), entry.getSecond())
-        );
+                Enchanting.getExperienceConsumption(entry.getFirst(), entry.getSecond()));
 
         if (processingTicks > 5) {
             var tankFluid = internalTank.getPrimaryHandler().getFluid().getFluid();
@@ -440,7 +451,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
     public void write(CompoundTag compoundTag, boolean clientPacket) {
         super.write(compoundTag, clientPacket);
         compoundTag.putInt("ProcessingTicks", processingTicks);
-        compoundTag.put("TargetItem", targetItem.serializeNBT());
+        compoundTag.put("TargetItem", targetItem.save(new CompoundTag()));
         compoundTag.putBoolean("Goggles", goggles);
         if (heldItem != null)
             compoundTag.put("HeldItem", heldItem.serializeNBT());
@@ -465,18 +476,18 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
             spawnEnchantParticles();
     }
 
-    @Override
-    @NotNull
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-        if (side != null && side.getAxis()
-                .isHorizontal() && isItemHandlerCap(capability))
-            return itemHandlers.get(side)
-                    .cast();
+    @Nullable
+    public static Storage<ItemVariant> getItemStorage(BlazeEnchanterBlockEntity be, @Nullable Direction side) {
+        if (side != null && side.getAxis().isHorizontal() && be.itemHandlers.get(side).isPresent())
+            return be.itemHandlers.get(side).getValueUnsafer();
+        return null;
+    }
 
-        if ((side == Direction.DOWN || side == null) && isFluidHandlerCap(capability))
-            return internalTank.getCapability()
-                    .cast();
-        return super.getCapability(capability, side);
+    @Nullable
+    public static Storage<FluidVariant> getFluidStorage(BlazeEnchanterBlockEntity be, @Nullable Direction side) {
+        if (side == Direction.DOWN || side == null)
+            return be.internalTank.getCapability();
+        return null;
     }
 
     @Override
@@ -495,7 +506,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
                     int consumption = Enchanting.getExperienceConsumption(entry.getFirst(), entry.getSecond());
                     if (consumption > CeiConfigs.SERVER.blazeEnchanterTankCapacity.get())
                         tooltip.add(Component.literal("     ").append(LANG.translate("gui.goggles.too_expensive")
-                                        .component())
+                                .component())
                                 .withStyle(ChatFormatting.RED));
                     else
                         tooltip.add(Component.literal("     ")
@@ -504,7 +515,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
                 }
             }
         }
-        containedFluidTooltip(tooltip, isPlayerSneaking, getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY));
+        containedFluidTooltip(tooltip, isPlayerSneaking, getFluidStorage(this, null));
         return true;
     }
 

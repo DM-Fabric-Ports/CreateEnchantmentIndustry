@@ -2,9 +2,10 @@ package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.d
 
 import com.simibubi.create.content.contraptions.processing.ProcessingRecipe;
 import com.simibubi.create.content.contraptions.processing.ProcessingRecipeBuilder;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.items.wrapper.RecipeWrapper;
 import plus.dragons.createenchantmentindustry.entry.CeiFluids;
 import plus.dragons.createenchantmentindustry.entry.CeiRecipeTypes;
 
@@ -19,7 +20,7 @@ public class DisenchantRecipe extends ProcessingRecipe<RecipeWrapper> {
         FluidStack fluid = fluidResults.get(0);
         if (!fluid.getFluid().isSame(CeiFluids.EXPERIENCE.get().getSource()))
             throw new IllegalArgumentException("Illegal Disenchanting Recipe: " + id.toString() + " has wrong type of fluid output!");
-        this.experience = fluid.getAmount();
+        this.experience = (int) fluid.getAmount();
     }
 
     @Override

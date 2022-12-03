@@ -1,14 +1,14 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.enchanter;
 
+import java.util.function.Supplier;
+
 import com.simibubi.create.foundation.networking.SimplePacketBase;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
 import plus.dragons.createenchantmentindustry.entry.CeiItems;
-
-import java.util.function.Supplier;
 
 public class EnchantingGuideEditPacket extends SimplePacketBase {
 
@@ -33,7 +33,7 @@ public class EnchantingGuideEditPacket extends SimplePacketBase {
     }
 
     @Override
-    public void handle(Supplier<NetworkEvent.Context> context) {
+    public void handle(Supplier<Context> context) {
         context.get()
                 .enqueueWork(() -> {
                     ServerPlayer sender = context.get()
@@ -44,7 +44,7 @@ public class EnchantingGuideEditPacket extends SimplePacketBase {
 
                     CompoundTag tag = mainHandItem.getOrCreateTag();
                     tag.putInt("index", index);
-                    tag.put("target", itemStack.serializeNBT());
+                    tag.put("target", itemStack.save(new CompoundTag()));
 
                     sender.getCooldowns()
                             .addCooldown(mainHandItem.getItem(), 5);

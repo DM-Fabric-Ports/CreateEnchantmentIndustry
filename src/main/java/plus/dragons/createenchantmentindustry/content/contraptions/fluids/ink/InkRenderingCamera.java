@@ -1,12 +1,12 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.fluids.ink;
 
-import net.minecraftforge.client.event.ViewportEvent;
+import io.github.fabricators_of_create.porting_lib.event.client.FogEvents;
 
 public interface InkRenderingCamera {
 
     boolean isInInk();
 
-    static void handleInkFogColor(ViewportEvent.ComputeFogColor event) {
+    static void handleInkFogColor(FogEvents.ColorData event, float partialTicks) {
         if (((InkRenderingCamera) event.getCamera()).isInInk()) {
             event.setRed(0);
             event.setGreen(0);

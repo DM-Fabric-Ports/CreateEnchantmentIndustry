@@ -1,5 +1,14 @@
 package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.printer;
 
+import static com.simibubi.create.foundation.tileEntity.behaviour.belt.BeltProcessingBehaviour.ProcessingResult.HOLD;
+import static com.simibubi.create.foundation.tileEntity.behaviour.belt.BeltProcessingBehaviour.ProcessingResult.PASS;
+import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.contraptions.relays.belt.transport.TransportedItemStack;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
@@ -9,6 +18,10 @@ import com.simibubi.create.foundation.tileEntity.behaviour.belt.BeltProcessingBe
 import com.simibubi.create.foundation.tileEntity.behaviour.belt.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.utility.VecHelper;
+
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,12 +39,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createdragonlib.mixin.AdvancementBehaviourAccessor;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.FilteringFluidTankBehaviour;
 import plus.dragons.createenchantmentindustry.entry.CeiTags;
@@ -39,19 +46,12 @@ import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancem
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiTriggers;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.simibubi.create.foundation.tileEntity.behaviour.belt.BeltProcessingBehaviour.ProcessingResult.HOLD;
-import static com.simibubi.create.foundation.tileEntity.behaviour.belt.BeltProcessingBehaviour.ProcessingResult.PASS;
-import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
-
 public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleInformation {
 
     public static final int COPYING_TIME = 100;
     protected BeltProcessingBehaviour beltProcessing;
     public int processingTicks;
-    SmartFluidTankBehaviour tank;
+    public SmartFluidTankBehaviour tank;
     public ItemStack copyTarget;
     public boolean tooExpensive;
     boolean sendParticles;
@@ -64,11 +64,11 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
     }
 
     @Override
-    @SuppressWarnings("deprecation") //Fluid Tags are still useful for mod interaction
+    @SuppressWarnings("deprecation") // Fluid Tags are still useful for mod interaction
     public void addBehaviours(List<TileEntityBehaviour> behaviours) {
         behaviours.add(tank = FilteringFluidTankBehaviour
-            .single(fluidStack -> fluidStack.getFluid().is(CeiTags.FluidTag.PRINTER_INPUT.tag()),
-                this, CeiConfigs.SERVER.copierTankCapacity.get()));
+                .single((variant, amount) -> variant.getFluid().is(CeiTags.FluidTag.PRINTER_INPUT.tag()),
+                        this, CeiConfigs.SERVER.copierTankCapacity.get()));
         behaviours.add(beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemReceived)
                 .whileItemHeld(this::whenItemHeld));
         registerAwardables(behaviours,
@@ -77,6 +77,7 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
                 CeiAdvancements.RELIC_RESTORATION.asCreateAdvancement());
     }
 
+    @Override
     public void tick() {
         super.tick();
 
@@ -98,11 +99,12 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
             m = new Vec3(m.x, Math.abs(m.y), m.z);
             level.addAlwaysVisibleParticle(particle, vec.x, vec.y, vec.z, m.x, m.y, m.z);
         }
-        level.playLocalSound(vec.x, vec.y, vec.z, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1f, level.random.nextFloat() * .1f + .9f, true);
+        level.playLocalSound(vec.x, vec.y, vec.z, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1f,
+                level.random.nextFloat() * .1f + .9f, true);
     }
 
     protected BeltProcessingBehaviour.ProcessingResult onItemReceived(TransportedItemStack transported,
-                                                                      TransportedItemStackHandlerBehaviour handler) {
+            TransportedItemStackHandlerBehaviour handler) {
         if (handler.tileEntity.isVirtual())
             return PASS;
         if (tooExpensive || copyTarget == null)
@@ -117,7 +119,7 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
     }
 
     protected BeltProcessingBehaviour.ProcessingResult whenItemHeld(TransportedItemStack transported,
-                                                                    TransportedItemStackHandlerBehaviour handler) {
+            TransportedItemStackHandlerBehaviour handler) {
         if (processingTicks != -1 && processingTicks != 10)
             return HOLD;
         if (tooExpensive || copyTarget == null)
@@ -146,12 +148,13 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
                 award(CeiAdvancements.COPIABLE_MASTERPIECE.asCreateAdvancement());
                 if (item.getOrCreateTag().getInt("generation") == 3)
                     award(CeiAdvancements.RELIC_RESTORATION.asCreateAdvancement());
-            } else award(CeiAdvancements.COPIABLE_MYSTERY.asCreateAdvancement());
+            } else
+                award(CeiAdvancements.COPIABLE_MYSTERY.asCreateAdvancement());
             var advancementBehaviour = getBehaviour(AdvancementBehaviour.TYPE);
             var playerId = ((AdvancementBehaviourAccessor) advancementBehaviour).getPlayerId();
             if (playerId != null) {
                 var player = level.getPlayerByUUID(playerId);
-                if(player!=null)
+                if (player != null)
                     CeiTriggers.BOOK_PRINTED.trigger(player, 1);
             }
         }
@@ -165,7 +168,8 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
         if (!transported.stack.isEmpty())
             held = transported.copy();
         outList.add(result);
-        handler.handleProcessingOnItem(transported, TransportedItemStackHandlerBehaviour.TransportedResult.convertToAndLeaveHeld(outList, held));
+        handler.handleProcessingOnItem(transported,
+                TransportedItemStackHandlerBehaviour.TransportedResult.convertToAndLeaveHeld(outList, held));
         tank.getPrimaryHandler().setFluid(fluid);
         sendParticles = true;
         notifyUpdate();
@@ -183,7 +187,7 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
         compoundTag.putInt("ProcessingTicks", processingTicks);
         compoundTag.putBoolean("tooExpensive", tooExpensive);
         if (copyTarget != null)
-            compoundTag.put("copyTarget", copyTarget.serializeNBT());
+            compoundTag.put("copyTarget", copyTarget.save(new CompoundTag()));
         if (sendParticles && clientPacket) {
             compoundTag.putBoolean("SpawnParticles", true);
             sendParticles = false;
@@ -204,13 +208,11 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
             spawnParticles();
     }
 
-    @Override
-    @NotNull
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side != Direction.DOWN)
-            return tank.getCapability()
-                    .cast();
-        return super.getCapability(cap, side);
+    @Nullable
+    public static Storage<FluidVariant> getStorage(PrinterBlockEntity be, @Nullable Direction side) {
+        if (side != Direction.DOWN || side == null)
+            return be.tank.getCapability();
+        return null;
     }
 
     @Override
@@ -234,31 +236,31 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
                         .text(ChatFormatting.GRAY, " / ")
                         .add(LANG.number(page)
                                 .text(" ")
-                                .add(page == 1 ? LANG.translate("generic.unit.page") : LANG.translate("generic.unit.pages"))
+                                .add(page == 1 ? LANG.translate("generic.unit.page")
+                                        : LANG.translate("generic.unit.pages"))
                                 .style(ChatFormatting.DARK_GRAY));
                 b.forGoggles(tooltip, 1);
                 if (CopyingBook.isTooExpensive(copyTarget, CeiConfigs.SERVER.copierTankCapacity.get()))
                     tooltip.add(Component.literal("     ").append(LANG.translate(
-                            "gui.goggles.too_expensive").component()
-                    ).withStyle(ChatFormatting.RED));
+                            "gui.goggles.too_expensive").component()).withStyle(ChatFormatting.RED));
                 else
                     tooltip.add(Component.literal("     ").append(LANG.translate(
                             "gui.goggles.ink_consumption",
-                            String.valueOf(CopyingBook.getExperienceFromItem(copyTarget))).component()
-                    ).withStyle(ChatFormatting.DARK_GRAY));
+                            String.valueOf(CopyingBook.getExperienceFromItem(copyTarget))).component())
+                            .withStyle(ChatFormatting.DARK_GRAY));
             } else if (copyTarget.is(Items.ENCHANTED_BOOK)) {
                 var b = LANG.itemName(copyTarget).style(ChatFormatting.LIGHT_PURPLE);
                 b.forGoggles(tooltip, 1);
-                boolean tooExpensive = CopyingBook.isTooExpensive(copyTarget, CeiConfigs.SERVER.copierTankCapacity.get());
+                boolean tooExpensive = CopyingBook.isTooExpensive(copyTarget,
+                        CeiConfigs.SERVER.copierTankCapacity.get());
                 if (tooExpensive)
                     tooltip.add(Component.literal("     ").append(LANG.translate(
-                        "gui.goggles.too_expensive").component()
-                    ).withStyle(ChatFormatting.RED));
+                            "gui.goggles.too_expensive").component()).withStyle(ChatFormatting.RED));
                 else
                     tooltip.add(Component.literal("     ").append(LANG.translate(
                             "gui.goggles.xp_consumption",
-                            String.valueOf(CopyingBook.getExperienceFromItem(copyTarget))).component()
-                    ).withStyle(ChatFormatting.GREEN));
+                            String.valueOf(CopyingBook.getExperienceFromItem(copyTarget))).component())
+                            .withStyle(ChatFormatting.GREEN));
                 var map = EnchantmentHelper.getEnchantments(copyTarget);
                 for (var e : map.entrySet()) {
                     Component name = e.getKey().getFullname(e.getValue());
@@ -266,7 +268,7 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
                 }
             }
         }
-        containedFluidTooltip(tooltip, isPlayerSneaking, getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY));
+        containedFluidTooltip(tooltip, isPlayerSneaking, getStorage(this, null));
         return true;
     }
 
