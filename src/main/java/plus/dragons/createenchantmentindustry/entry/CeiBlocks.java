@@ -2,6 +2,8 @@ package plus.dragons.createenchantmentindustry.entry;
 
 import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.REGISTRATE;
 
+import net.minecraft.client.renderer.RenderType;
+
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
 import com.simibubi.create.content.contraptions.components.AssemblyOperatorBlockItem;
@@ -26,6 +28,7 @@ public class CeiBlocks {
             .initialProperties(SharedProperties::copperMetal)
             .transform(TagGen.pickaxeOnly())
             .blockstate((ctx, pov) -> pov.simpleBlock(ctx.get(), AssetLookup.standardModel(ctx, pov)))
+            .addLayer(() -> RenderType::cutout)
             .simpleItem()
             .register();
 
@@ -34,6 +37,7 @@ public class CeiBlocks {
             .initialProperties(SharedProperties::copperMetal)
             .transform(TagGen.pickaxeOnly())
             .blockstate((ctx, pov) -> pov.simpleBlock(ctx.get(), AssetLookup.partialBaseModel(ctx, pov)))
+            .addLayer(() -> RenderType::cutout)
             .item(AssemblyOperatorBlockItem::new)
             .model(AssetLookup::customItemModel)
             .build()
@@ -42,6 +46,8 @@ public class CeiBlocks {
     public static final BlockEntry<BlazeEnchanterBlock> BLAZE_ENCHANTER = REGISTRATE
             .block("blaze_enchanter", BlazeEnchanterBlock::new)
             .initialProperties(SharedProperties::softMetal)
+            .properties(p -> p.lightLevel(BlazeEnchanterBlock::getLightEmission))
+            .addLayer(() -> RenderType::cutout)
             .transform(TagGen.pickaxeOnly())
             .blockstate((ctx, pov) -> pov.simpleBlock(ctx.get(), AssetLookup.standardModel(ctx, pov)))
             .register();

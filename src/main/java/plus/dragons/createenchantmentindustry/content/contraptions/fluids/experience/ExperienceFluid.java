@@ -10,7 +10,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import plus.dragons.createenchantmentindustry.foundation.mixin.ExperienceOrbAccessor;
 
 public class ExperienceFluid extends VirtualFluid {
 
@@ -33,7 +32,7 @@ public class ExperienceFluid extends VirtualFluid {
         while (fluidAmount > 0) {
             int orbSize = ExperienceOrb.getExperienceValue((int) fluidAmount);
             fluidAmount -= orbSize;
-            if (!ExperienceOrbAccessor.invokeTryMergeToExisiting(level, pos, orbSize)) {
+            if (!ExperienceOrb.tryMergeToExisting(level, pos, orbSize)) {
                 level.addFreshEntity(this.convertToOrb(level, pos.x, pos.y, pos.z, orbSize));
             }
         }
@@ -42,12 +41,12 @@ public class ExperienceFluid extends VirtualFluid {
     public void awardOrDrop(@Nullable Player player, ServerLevel level, Vec3 pos, Vec3 speed, int amount) {
         var orb = this.convertToOrb(level, pos.x, pos.y, pos.z, amount);
         if (player == null) {
-            if (!ExperienceOrbAccessor.invokeTryMergeToExisiting(level, pos, orb.getValue())) {
+            if (!ExperienceOrb.tryMergeToExisting(level, pos, orb.getValue())) {
                 orb.setDeltaMovement(speed);
                 level.addFreshEntity(orb);
             }
         } else {
-            int left = ((ExperienceOrbAccessor) orb).invokeRepairPlayerItems(player, orb.getValue());
+            int left = orb.repairPlayerItems(player, orb.getValue());
             if (left > 0) {
                 player.giveExperiencePoints(left);
                 this.applyAdditionalEffects(player, left);

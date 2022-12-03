@@ -9,6 +9,8 @@ import com.simibubi.create.foundation.tileEntity.behaviour.fluid.SmartFluidTankB
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 import plus.dragons.createenchantmentindustry.foundation.mixin.TankSegmentAccessor;
 
 public class FilteringFluidTankBehaviour extends SmartFluidTankBehaviour {
@@ -20,7 +22,6 @@ public class FilteringFluidTankBehaviour extends SmartFluidTankBehaviour {
         boolean test(FluidVariant variant, long amount);
     }
 
-    @SuppressWarnings("unchecked")
     public FilteringFluidTankBehaviour(BehaviourType<SmartFluidTankBehaviour> type,
             FluidFilter filter,
             SmartTileEntity te,
@@ -28,13 +29,13 @@ public class FilteringFluidTankBehaviour extends SmartFluidTankBehaviour {
             boolean enforceVariety) {
         super(type, te, tanks, tankCapacity, enforceVariety);
         this.filter = filter;
-        ArrayList<SingleVariantStorage<FluidVariant>> handlers = new ArrayList<>();
+        FluidTank[] handlers = new FluidTank[tanks];
         for (int i = 0; i < tanks; i++) {
             TankSegment tankSegment = new TankSegment(tankCapacity);
             this.tanks[i] = tankSegment;
-            handlers.set(i, ((TankSegmentAccessor) tankSegment).getTank());
+            handlers[i] = ((TankSegmentAccessor) tankSegment).getTank();
         }
-        this.capability = new InternalFluidHandler((SingleVariantStorage<FluidVariant>[]) handlers.toArray(), enforceVariety);
+        this.capability = new InternalFluidHandler(handlers, enforceVariety);
     }
 
     public static FilteringFluidTankBehaviour single(FluidFilter filter, SmartTileEntity te, int capacity) {
@@ -43,7 +44,7 @@ public class FilteringFluidTankBehaviour extends SmartFluidTankBehaviour {
 
     public class InternalFluidHandler extends SmartFluidTankBehaviour.InternalFluidHandler {
 
-        public InternalFluidHandler(SingleVariantStorage<FluidVariant>[] handlers, boolean enforceVariety) {
+        public InternalFluidHandler(FluidTank[] handlers, boolean enforceVariety) {
             super(handlers, enforceVariety);
         }
 
@@ -55,5 +56,4 @@ public class FilteringFluidTankBehaviour extends SmartFluidTankBehaviour {
         }
 
     }
-
 }

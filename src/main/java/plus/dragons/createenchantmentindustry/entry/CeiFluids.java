@@ -50,7 +50,6 @@ public class CeiFluids {
 
     public static final FluidEntry<SimpleFlowableFluid.Flowing> INK = REGISTRATE
             .fluid("ink", INK_STILL_RL, INK_FLOW_RL)
-            .renderType(() -> () -> RenderTypes.getFluid())
             .fluidProperties(p -> p.levelDecreasePerBlock(2)
                     .tickRate(25).blastResistance(100F))
             .source(SimpleFlowableFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder

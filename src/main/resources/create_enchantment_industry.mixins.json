@@ -3,12 +3,9 @@
   "priority": 1100,
   "package": "plus.dragons.createenchantmentindustry.foundation.mixin",
   "compatibilityLevel": "JAVA_16",
-  "refmap": "create_enchantment_industry.refmap.json",
   "mixins": [
     "BasinBlockMixin",
-    "BlockGetterMixin",
     "DeployerFakePlayerMixin",
-    "ExperienceOrbAccessor",
     "FluidTankBlockMixin",
     "ItemDrainBlockMixin",
     "ItemDrainTileEntityAccessor",
@@ -19,8 +16,7 @@
     "TankSegmentAccessor"
   ],
   "client": [
-    "CameraMixin",
-    "ModelBakeryAccessor"
+    "CameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1

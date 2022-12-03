@@ -53,6 +53,7 @@ public class EnchantmentIndustry implements ModInitializer, DataGeneratorEntrypo
         CeiPackets.registerPackets();
         CeiFluids.registerLavaReaction();
         OpenEndedPipeEffects.register();
+        CeiBlockEntities.registerTransfer();
     }
 
     @Override

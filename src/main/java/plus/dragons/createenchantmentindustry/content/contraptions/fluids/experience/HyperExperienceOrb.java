@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import plus.dragons.createenchantmentindustry.entry.CeiEntityTypes;
 import plus.dragons.createenchantmentindustry.entry.CeiFluids;
-import plus.dragons.createenchantmentindustry.foundation.mixin.ExperienceOrbAccessor;
 
 public class HyperExperienceOrb extends ExperienceOrb {
 
@@ -19,7 +18,7 @@ public class HyperExperienceOrb extends ExperienceOrb {
         this.setDeltaMovement((this.random.nextDouble() * (double) 0.2F - (double) 0.1F) * 2.0D,
                 this.random.nextDouble() * 0.2D * 2.0D,
                 (this.random.nextDouble() * (double) 0.2F - (double) 0.1F) * 2.0D);
-        ((ExperienceOrbAccessor) this).setValue(value);
+        this.value = value;
     }
 
     public HyperExperienceOrb(EntityType<? extends HyperExperienceOrb> entityType, Level level) {
@@ -42,15 +41,14 @@ public class HyperExperienceOrb extends ExperienceOrb {
             if (player.takeXpDelay == 0) {
                 player.takeXpDelay = 2;
                 player.take(this, 1);
-                ExperienceOrbAccessor accessor = (ExperienceOrbAccessor) this;
-                int i = accessor.invokeRepairPlayerItems(player, this.getValue());
+                int i = this.repairPlayerItems(player, this.getValue());
                 if (i > 0) {
                     player.giveExperiencePoints(i);
                     applyPlayerEffects(player, i);
                 }
 
-                accessor.setCount(accessor.getCount() - 1);
-                if (accessor.getCount() == 0) {
+                --this.count;
+                if (this.count == 0) {
                     this.discard();
                 }
             }

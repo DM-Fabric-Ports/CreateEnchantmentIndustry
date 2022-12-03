@@ -52,6 +52,10 @@ public class CeiBlockEntities {
         // }
 
         public static void register() {
+
+        }
+
+        public static void registerTransfer() {
                 ItemStorage.SIDED.registerForBlockEntity(DisenchanterBlockEntity::getItemStorage, DISENCHANTER.get());
                 FluidStorage.SIDED.registerForBlockEntity(DisenchanterBlockEntity::getFluidStorage, DISENCHANTER.get());
 

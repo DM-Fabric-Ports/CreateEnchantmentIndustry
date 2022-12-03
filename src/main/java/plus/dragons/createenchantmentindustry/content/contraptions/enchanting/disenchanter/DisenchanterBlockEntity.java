@@ -47,7 +47,6 @@ import plus.dragons.createenchantmentindustry.entry.CeiFluids;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiTriggers;
 import plus.dragons.createenchantmentindustry.foundation.config.CeiConfigs;
-import plus.dragons.createenchantmentindustry.foundation.mixin.ExperienceOrbAccessor;
 
 public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGoggleInformation {
 
@@ -259,7 +258,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         if (!experienceOrbs.isEmpty()) {
             internalTank.allowInsertion();
             for (var orb : experienceOrbs) {
-                var amount = orb.getValue();
+                var amount = orb.value;
                 var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), amount * 81);
                 var inserted = TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidStack) / 81;
                 if (inserted == amount) {
@@ -268,7 +267,7 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
                 } else {
                     if (inserted != 0) {
                         absorbedXp = true;
-                        ((ExperienceOrbAccessor) orb).setValue((int) (orb.getValue() - inserted));
+                        orb.value = (int) (orb.value - inserted);
                     }
                     break;
                 }

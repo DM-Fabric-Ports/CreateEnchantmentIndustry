@@ -9,9 +9,12 @@
   "environment": "*",
   "icon": "pack.png",
   "entrypoints": {
-    "main": ["plus.dragons.createenchantmentindustry.EnchantmentIndustry"]
+    "main": ["plus.dragons.createenchantmentindustry.EnchantmentIndustry"],
+    "client": ["plus.dragons.createenchantmentindustry.EnchantmentIndustryClient"],
+    "jei_mod_plugin": ["plus.dragons.createenchantmentindustry.compat.jei.CeiJEIPlugin"]
   },
   "mixins": ["create_enchantment_industry.mixins.json"],
+  "accessWidener" : "create_enchantment_industry.accesswidener",
   "depends": {
     "fabricloader": ">=0.14.6",
     "fabric": "*",

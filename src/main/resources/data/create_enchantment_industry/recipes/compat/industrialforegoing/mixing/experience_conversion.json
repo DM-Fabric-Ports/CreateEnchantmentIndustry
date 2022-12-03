@@ -1,8 +1,10 @@
 {
-  "conditions": [
+  "fabric:load_conditions": [
     {
-      "type": "forge:mod_loaded",
-      "modid": "industrialforegoing"
+      "condition": "fabric:all_mods_loaded",
+      "values": [
+        "industrialforegoing"
+      ]
     }
   ],
   "type": "create:mixing",
@@ -12,13 +14,13 @@
     },
     {
       "fluid": "industrialforegoing:essence",
-      "amount": 200
+      "amount": 16200
     }
   ],
   "results": [
     {
       "fluid": "create_enchantment_industry:experience",
-      "amount": 10
+      "amount": 810
     }
   ]
 }

@@ -190,11 +190,10 @@ public class BlazeEnchanterBlock extends HorizontalDirectionalBlock implements I
         return false;
     }
 
-    public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
-        var te = level.getBlockEntity(pos);
-        if(te instanceof BlazeEnchanterBlockEntity blazeEnchanterBlockEntity){
-            if(blazeEnchanterBlockEntity.hyper()) return 15;
-            else if(blazeEnchanterBlockEntity.internalTank.isEmpty()) return 7;
+    public static int getLightEmission(BlockState state) {
+        if(state.getBlock() instanceof BlazeEnchanterBlock){
+            if(state.getValue(HEAT_LEVEL) == HeatLevel.SEETHING) return 15;
+            else if(state.getValue(HEAT_LEVEL) == HeatLevel.SMOULDERING) return 7;
             else return 11;
         } else return 0;
     }

@@ -1,0 +1,7 @@
+accessWidener v1 named
+
+accessible field net/minecraft/client/resources/model/ModelBakery UNREFERENCED_TEXTURES Ljava/util/Set;
+accessible field net/minecraft/world/entity/ExperienceOrb count I
+accessible field net/minecraft/world/entity/ExperienceOrb value I
+accessible method net/minecraft/world/entity/ExperienceOrb tryMergeToExisting (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)Z
+accessible method net/minecraft/world/entity/ExperienceOrb repairPlayerItems (Lnet/minecraft/world/entity/player/Player;I)I

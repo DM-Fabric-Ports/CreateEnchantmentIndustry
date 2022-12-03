@@ -34,9 +34,9 @@ public class DisenchanterItemHandler implements SingleSlotStorage<ItemVariant> {
             return disenchanted.getCount();
         }
 
-        ItemStack returned = ItemStack.EMPTY;
+        long returned = amount;
         if (stack.getCount() > 1 && Disenchanting.disenchantResult(stack, be.getLevel()) != null) {
-            returned = ItemHandlerHelper.copyStackWithSize(stack, stack.getCount() - 1);
+            returned = 1;
             stack = ItemHandlerHelper.copyStackWithSize(stack, 1);
         }
 
@@ -45,7 +45,7 @@ public class DisenchanterItemHandler implements SingleSlotStorage<ItemVariant> {
         be.setHeldItem(heldItem, side.getOpposite());
         be.notifyUpdate();
 
-        return returned.getCount();
+        return returned;
     }
 
     @Override
