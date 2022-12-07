@@ -25,26 +25,28 @@ public class Disenchanting {
 
     private static final RecipeWrapper WRAPPER = new RecipeWrapper(new ItemStackHandler(1));
 
-    public static ItemStack disenchantAndInsert(DisenchanterBlockEntity be, ItemStack itemStack) {
+    public static long disenchantAndInsert(DisenchanterBlockEntity be, ItemStack itemStack) {
         Level level = be.getLevel();
         if (level == null)
-            return itemStack;
+            return 0;
         WRAPPER.setItem(0, itemStack);
         return CeiRecipeTypes.DISENCHANTING.<RecipeWrapper, DisenchantRecipe>find(WRAPPER, be.getLevel())
                 .map(recipe -> {
                     if (!recipe.hasNoResult())
-                        return itemStack;
+                        return (long) 0;
                     var tank = be.getInternalTank();
                     tank.allowInsertion();
                     long amount = recipe.getExperience();
                     var fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(),
                             itemStack.getCount() * amount);
-                    long inserted = TransferUtil.insertFluid(tank.getPrimaryHandler(), fluidStack) / amount;
-                    ItemStack ret = itemStack.copy();
-                    ret.shrink((int) inserted);
+                    long actualInserted = TransferUtil.insertFluid(tank.getPrimaryHandler(), fluidStack);
+                    long inserted = actualInserted / amount;
+                    TransferUtil.extractFluid(tank.getPrimaryHandler(), fluidStack.copy().setAmount(actualInserted));
+                    fluidStack = new FluidStack(CeiFluids.EXPERIENCE.get().getSource(), inserted * amount);
+                    TransferUtil.insertFluid(tank.getPrimaryHandler(), fluidStack);
                     tank.forbidInsertion();
-                    return ret;
-                }).orElse(itemStack);
+                    return inserted;
+                }).orElse((long) 0);
     }
 
     // Produce result only. Do not modify stack.

@@ -11,7 +11,7 @@ import plus.dragons.createenchantmentindustry.entry.CeiRecipeTypes;
 
 public class DisenchantRecipe extends ProcessingRecipe<RecipeWrapper> {
 
-    private final int experience;
+    private final long experience;
 
     public DisenchantRecipe(ProcessingRecipeBuilder.ProcessingRecipeParams params) {
         super(CeiRecipeTypes.DISENCHANTING, params);
@@ -20,7 +20,7 @@ public class DisenchantRecipe extends ProcessingRecipe<RecipeWrapper> {
         FluidStack fluid = fluidResults.get(0);
         if (!fluid.getFluid().isSame(CeiFluids.EXPERIENCE.get().getSource()))
             throw new IllegalArgumentException("Illegal Disenchanting Recipe: " + id.toString() + " has wrong type of fluid output!");
-        this.experience = (int) fluid.getAmount();
+        this.experience = fluid.getAmount();
     }
 
     @Override
@@ -52,7 +52,7 @@ public class DisenchantRecipe extends ProcessingRecipe<RecipeWrapper> {
         return results.isEmpty();
     }
 
-    public int getExperience() {
+    public long getExperience() {
         return experience;
     }
 }

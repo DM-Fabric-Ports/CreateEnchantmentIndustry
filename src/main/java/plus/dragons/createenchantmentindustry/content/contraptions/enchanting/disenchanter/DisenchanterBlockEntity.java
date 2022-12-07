@@ -352,7 +352,9 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
         if (!getHeldItemStack().isEmpty())
             return inserted;
 
-        ItemStack disenchanted = Disenchanting.disenchantAndInsert(this, transportedStack.stack);
+        ItemStack disenchanted = new ItemStack(transportedStack.stack.getItem(),
+                (int) (transportedStack.stack.getCount()
+                        - Disenchanting.disenchantAndInsert(this, transportedStack.stack)));
         if (!ItemStack.matches(transportedStack.stack, disenchanted)) {
             return disenchanted;
         }

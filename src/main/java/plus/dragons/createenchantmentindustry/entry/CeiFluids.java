@@ -4,7 +4,6 @@ import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.REGISTR
 
 import com.simibubi.create.Create;
 import com.simibubi.create.content.AllSections;
-import com.simibubi.create.foundation.render.RenderTypes;
 import com.tterrag.registrate.fabric.SimpleFlowableFluid;
 import com.tterrag.registrate.util.entry.FluidEntry;
 

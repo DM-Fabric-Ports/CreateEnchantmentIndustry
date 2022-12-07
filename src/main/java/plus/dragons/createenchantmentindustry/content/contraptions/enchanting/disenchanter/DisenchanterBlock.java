@@ -53,12 +53,14 @@ public class DisenchanterBlock extends Block implements IWrenchable, ITE<Disench
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn,
+            BlockHitResult hit) {
         ItemStack heldItem = player.getItemInHand(handIn);
         if (heldItem.isEmpty())
             return InteractionResult.PASS;
         return onTileEntityUse(worldIn, pos, te -> {
-            ItemStack disenchanted = Disenchanting.disenchantAndInsert(te, heldItem);
+            ItemStack disenchanted = new ItemStack(heldItem.getItem(),
+                    (int) (heldItem.getCount() - Disenchanting.disenchantAndInsert(te, heldItem)));
             if (!ItemStack.matches(disenchanted, heldItem)) {
                 player.setItemInHand(handIn, disenchanted);
                 return InteractionResult.sidedSuccess(worldIn.isClientSide);
@@ -87,11 +89,11 @@ public class DisenchanterBlock extends Block implements IWrenchable, ITE<Disench
         if (level instanceof ServerLevel serverLevel) {
             withTileEntityDo(level, pos, te -> {
                 ItemStack heldItemStack = te.getHeldItemStack();
-                if(!heldItemStack.isEmpty())
+                if (!heldItemStack.isEmpty())
                     Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), heldItemStack);
                 var tank = te.getInternalTank().getPrimaryHandler();
                 var fluidStack = tank.getFluid();
-                if(fluidStack.getFluid() instanceof ExperienceFluid expFluid) {
+                if (fluidStack.getFluid() instanceof ExperienceFluid expFluid) {
                     expFluid.drop(serverLevel, VecHelper.getCenterOf(pos), fluidStack.getAmount());
                 }
             });
@@ -100,7 +102,8 @@ public class DisenchanterBlock extends Block implements IWrenchable, ITE<Disench
     }
 
     @Override
-    public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
+    public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer,
+            ItemStack pStack) {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
         AdvancementBehaviour.setPlacedBy(pLevel, pPos, pPlacer);
     }
