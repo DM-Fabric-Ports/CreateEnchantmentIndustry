@@ -7,7 +7,7 @@
   ],
   "key": {
     "Z": {
-      "tag": "forge:ingots/zinc"
+      "tag": "c:ingots/zinc"
     },
     "E": {
       "item": "create:experience_nugget"

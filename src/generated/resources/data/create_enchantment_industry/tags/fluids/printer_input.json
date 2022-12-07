@@ -2,6 +2,6 @@
   "values": [
     "create_enchantment_industry:flowing_experience",
     "create_enchantment_industry:experience",
-    "#forge:ink"
+    "#c:ink"
   ]
 }

@@ -23,7 +23,7 @@ import net.minecraft.world.level.material.Fluid;
 import plus.dragons.createenchantmentindustry.EnchantmentIndustry;
 
 public interface CeiTags<T, P extends RegistrateTagsProvider<T>> {
-    String FORGE = "forge";
+    String FORGE = "c";
     String CREATE = "create";
 
     TagKey<T> tag();
