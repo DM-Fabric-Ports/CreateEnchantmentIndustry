@@ -2,6 +2,15 @@ package plus.dragons.createenchantmentindustry.content.contraptions.enchanting.e
 
 import static plus.dragons.createenchantmentindustry.EnchantmentIndustry.LANG;
 
+import java.util.List;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerBlock;
+import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerTileEntity;
+import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
+
+import io.github.fabricators_of_create.porting_lib.util.NetworkUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -13,26 +22,16 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-
-import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerBlock;
-import com.simibubi.create.content.contraptions.processing.burner.BlazeBurnerTileEntity;
-import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
-import io.github.fabricators_of_create.porting_lib.util.NetworkUtil;
-import org.jetbrains.annotations.Nullable;
 import plus.dragons.createenchantmentindustry.entry.CeiBlocks;
 import plus.dragons.createenchantmentindustry.entry.CeiContainerTypes;
 import plus.dragons.createenchantmentindustry.entry.CeiItems;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
-
-import java.util.List;
-import java.util.Objects;
 
 public class EnchantingGuideItem extends Item implements MenuProvider {
 	public EnchantingGuideItem(Properties pProperties) {
@@ -48,16 +47,21 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
 	public InteractionResult useOn(UseOnContext pContext) {
 		var level = pContext.getLevel();
 		var player = pContext.getPlayer();
-		if (player == null) return InteractionResult.PASS;
+		if (player == null)
+			return InteractionResult.PASS;
 		if (player.isShiftKeyDown()) {
 			var itemStack = pContext.getItemInHand();
 			if (itemStack.is(CeiItems.ENCHANTING_GUIDE.get())) {
 				var blockPos = pContext.getClickedPos();
 				var blockState = level.getBlockState(blockPos);
 				var blockEntity = level.getBlockEntity(blockPos);
-				if (EnchantingGuideItem.getEnchantment(itemStack) != null && blockState.getBlock() instanceof BlazeBurnerBlock && blockEntity instanceof BlazeBurnerTileEntity) {
+				if (EnchantingGuideItem.getEnchantment(itemStack) != null
+						&& blockState.getBlock() instanceof BlazeBurnerBlock
+						&& blockEntity instanceof BlazeBurnerTileEntity) {
 					if (!level.isClientSide()) {
-						level.setBlockAndUpdate(blockPos, CeiBlocks.BLAZE_ENCHANTER.getDefaultState().setValue(BlazeEnchanterBlock.FACING, level.getBlockState(blockPos).getValue(BlazeBurnerBlock.FACING)));
+						level.setBlockAndUpdate(blockPos,
+								CeiBlocks.BLAZE_ENCHANTER.getDefaultState().setValue(BlazeEnchanterBlock.FACING,
+										level.getBlockState(blockPos).getValue(BlazeBurnerBlock.FACING)));
 						if (level.getBlockEntity(blockPos) instanceof BlazeEnchanterBlockEntity tileEntity) {
 							var i = itemStack.copy();
 							i.setCount(1);
@@ -65,7 +69,8 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
 						}
 						AdvancementBehaviour.setPlacedBy(pContext.getLevel(), blockPos, player);
 						CeiAdvancements.BLAZES_NEW_JOB.getTrigger().trigger((ServerPlayer) player);
-						if (!player.getAbilities().instabuild) itemStack.shrink(1);
+						if (!player.getAbilities().instabuild)
+							itemStack.shrink(1);
 					}
 					return InteractionResult.SUCCESS;
 				}
@@ -86,13 +91,15 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
 	}
 
 	@Override
-	public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents, TooltipFlag pIsAdvanced) {
+	public void appendHoverText(ItemStack pStack, @Nullable Level pLevel, List<Component> pTooltipComponents,
+			TooltipFlag pIsAdvanced) {
 		super.appendHoverText(pStack, pLevel, pTooltipComponents, pIsAdvanced);
 		pTooltipComponents.add(LANG.translate("tooltip.guide_header").component());
 		EnchantmentEntry enchantment = getEnchantment(pStack);
 		if (enchantment == null) {
 			pTooltipComponents.add(LANG.translate("tooltip.guide_not_configured").component());
-		} else pTooltipComponents.add(enchantment.getFirst().getFullname(enchantment.getSecond()));
+		} else
+			pTooltipComponents.add(enchantment.getFirst().getFullname(enchantment.getSecond()));
 	}
 
 	@Override
@@ -104,18 +111,22 @@ public class EnchantingGuideItem extends Item implements MenuProvider {
 	@Override
 	public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
 		ItemStack heldItem = pPlayer.getMainHandItem();
-		return new EnchantingGuideMenu(CeiContainerTypes.ENCHANTING_GUIDE_FOR_BLAZE.get(), pContainerId, pPlayerInventory, heldItem);
+		return new EnchantingGuideMenu(CeiContainerTypes.ENCHANTING_GUIDE_FOR_BLAZE.get(), pContainerId,
+				pPlayerInventory, heldItem);
 	}
 
 	@Nullable
 	public static EnchantmentEntry getEnchantment(ItemStack itemStack) {
 		var tag = itemStack.getTag();
-		if (tag == null || !tag.contains("target", Tag.TAG_COMPOUND)) return null;
+		if (tag == null || !tag.contains("target", Tag.TAG_COMPOUND))
+			return null;
 		var target = (CompoundTag) tag.get("target");
-		if (target == null) return null;
+		if (target == null)
+			return null;
 		var book = ItemStack.of(target);
 		var enchantments = List.copyOf(EnchantmentHelper.getEnchantments(book).entrySet());
-		if (enchantments.isEmpty()) return null;
+		if (enchantments.isEmpty())
+			return null;
 		var index = tag.getInt("index");
 		var result = enchantments.get(index);
 		return EnchantmentEntry.of(result.getKey(), result.getValue());

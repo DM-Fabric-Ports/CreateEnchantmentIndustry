@@ -13,8 +13,8 @@ public class HyperExperienceFluid extends ExperienceFluid {
     }
     
     @Override
-    public HyperExperienceOrb convertToOrb(Level level, double x, double y, double z, int fluidAmount) {
-        return new HyperExperienceOrb(level, x, y, z, fluidAmount * xpRatio);
+    public HyperExperienceOrb convertToOrb(Level level, double x, double y, double z, long fluidAmount) {
+        return new HyperExperienceOrb(level, x, y, z, (int) ((fluidAmount * xpRatio) / 81));
     }
     
     @Override

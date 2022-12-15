@@ -24,21 +24,21 @@ public class ExperienceFluid extends VirtualFluid {
         this(1, properties);
     }
 
-    public ExperienceOrb convertToOrb(Level level, double x, double y, double z, int fluidAmount) {
-        return new ExperienceOrb(level, x, y, z, fluidAmount);
+    public ExperienceOrb convertToOrb(Level level, double x, double y, double z, long fluidAmount) {
+        return new ExperienceOrb(level, x, y, z, (int) (fluidAmount / 81));
     }
 
     public void drop(ServerLevel level, Vec3 pos, long fluidAmount) {
         while (fluidAmount > 0) {
-            int orbSize = ExperienceOrb.getExperienceValue((int) fluidAmount);
-            fluidAmount -= orbSize;
+            int orbSize = ExperienceOrb.getExperienceValue((int) (fluidAmount / 81));
+            fluidAmount -= orbSize * 81;
             if (!ExperienceOrb.tryMergeToExisting(level, pos, orbSize)) {
                 level.addFreshEntity(this.convertToOrb(level, pos.x, pos.y, pos.z, orbSize));
             }
         }
     }
 
-    public void awardOrDrop(@Nullable Player player, ServerLevel level, Vec3 pos, Vec3 speed, int amount) {
+    public void awardOrDrop(@Nullable Player player, ServerLevel level, Vec3 pos, Vec3 speed, long amount) {
         var orb = this.convertToOrb(level, pos.x, pos.y, pos.z, amount);
         if (player == null) {
             if (!ExperienceOrb.tryMergeToExisting(level, pos, orb.getValue())) {

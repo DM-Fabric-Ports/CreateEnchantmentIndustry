@@ -247,7 +247,6 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
 
     }
 
-    @SuppressWarnings("unchecked")
     protected void blazeTick() {
         boolean active = processingTicks > 0;
 
