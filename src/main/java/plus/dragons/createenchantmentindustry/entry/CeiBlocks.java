@@ -10,6 +10,7 @@ import com.simibubi.create.content.contraptions.components.AssemblyOperatorBlock
 import com.simibubi.create.foundation.data.AssetLookup;
 import com.simibubi.create.foundation.data.SharedProperties;
 import com.simibubi.create.foundation.data.TagGen;
+import com.simibubi.create.foundation.data.TagGen;
 import com.tterrag.registrate.util.entry.BlockEntry;
 
 import plus.dragons.createenchantmentindustry.content.contraptions.enchanting.disenchanter.DisenchanterBlock;
@@ -27,6 +28,7 @@ public class CeiBlocks {
             .block("disenchanter", DisenchanterBlock::new)
             .initialProperties(SharedProperties::copperMetal)
             .transform(TagGen.pickaxeOnly())
+            .transform(TagGen.pickaxeOnly())
             .blockstate((ctx, pov) -> pov.simpleBlock(ctx.get(), AssetLookup.standardModel(ctx, pov)))
             .addLayer(() -> RenderType::cutout)
             .simpleItem()
@@ -35,6 +37,7 @@ public class CeiBlocks {
     public static final BlockEntry<PrinterBlock> PRINTER = REGISTRATE
             .block("printer", PrinterBlock::new)
             .initialProperties(SharedProperties::copperMetal)
+            .transform(TagGen.pickaxeOnly())
             .transform(TagGen.pickaxeOnly())
             .blockstate((ctx, pov) -> pov.simpleBlock(ctx.get(), AssetLookup.partialBaseModel(ctx, pov)))
             .addLayer(() -> RenderType::cutout)

@@ -40,9 +40,11 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.Containers;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -51,6 +53,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.FilteringFluidTankBehaviour;
+import plus.dragons.createenchantmentindustry.content.contraptions.fluids.experience.ExperienceFluid;
 import plus.dragons.createenchantmentindustry.entry.CeiFluids;
 import plus.dragons.createenchantmentindustry.entry.CeiTags;
 import plus.dragons.createenchantmentindustry.foundation.advancement.CeiAdvancements;
@@ -96,7 +99,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
         behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels()
                 .setInsertionHandler(this::tryInsertingFromSide));
         behaviours.add(internalTank = FilteringFluidTankBehaviour
-                .single((variant, amount) -> variant.getFluid().is(CeiTags.FluidTag.BLAZE_ENCHANTER_INPUT.tag()),
+                .single((variant, amount) -> variant.getFluid().is(CeiTags.FluidTag.BLAZE_ENCHANTER_INPUT.tag)),
                         this, CeiConfigs.SERVER.blazeEnchanterTankCapacity.get())
                 .whenFluidUpdates(() -> {
                     var fluid = internalTank.getPrimaryHandler().getFluid().getFluid();
@@ -436,10 +439,27 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
     }
 
     @Override
-    public void setRemoved() {
-        super.setRemoved();
+    public void invalidate() {
+        super.invalidate();
         for (LazyOptional<EnchantingItemHandler> lazyOptional : itemHandlers.values())
             lazyOptional.invalidate();
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (level instanceof ServerLevel serverLevel) {
+            ItemStack heldItemStack = getHeldItemStack();
+            var pos = getBlockPos();
+            if (!heldItemStack.isEmpty())
+                Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), heldItemStack);
+            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), targetItem);
+            var tank = internalTank.getPrimaryHandler();
+            var fluidStack = tank.getFluid();
+            if(fluidStack.getFluid() instanceof ExperienceFluid expFluid) {
+                expFluid.drop(serverLevel, VecHelper.getCenterOf(pos), fluidStack.getAmount());
+            }
+        }
     }
 
     public boolean hyper() {

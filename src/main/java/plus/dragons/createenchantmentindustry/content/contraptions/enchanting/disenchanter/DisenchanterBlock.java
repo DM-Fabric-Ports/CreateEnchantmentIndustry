@@ -11,12 +11,9 @@ import com.simibubi.create.content.contraptions.wrench.IWrenchable;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.block.ITE;
 import com.simibubi.create.foundation.tileEntity.ComparatorUtil;
-import com.simibubi.create.foundation.utility.VecHelper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -32,7 +29,6 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import plus.dragons.createenchantmentindustry.content.contraptions.fluids.experience.ExperienceFluid;
 import plus.dragons.createenchantmentindustry.entry.CeiBlockEntities;
 import plus.dragons.createenchantmentindustry.entry.CeiBlocks;
 
@@ -86,18 +82,7 @@ public class DisenchanterBlock extends Block implements IWrenchable, ITE<Disench
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.hasBlockEntity() || state.getBlock() == newState.getBlock())
             return;
-        if (level instanceof ServerLevel serverLevel) {
-            withTileEntityDo(level, pos, te -> {
-                ItemStack heldItemStack = te.getHeldItemStack();
-                if (!heldItemStack.isEmpty())
-                    Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), heldItemStack);
-                var tank = te.getInternalTank().getPrimaryHandler();
-                var fluidStack = tank.getFluid();
-                if (fluidStack.getFluid() instanceof ExperienceFluid expFluid) {
-                    expFluid.drop(serverLevel, VecHelper.getCenterOf(pos), fluidStack.getAmount());
-                }
-            });
-        }
+        ((DisenchanterBlockEntity) level.getBlockEntity(pos)).destroy();
         level.removeBlockEntity(pos);
     }
 

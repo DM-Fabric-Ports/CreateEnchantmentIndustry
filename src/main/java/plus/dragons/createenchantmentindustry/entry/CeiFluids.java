@@ -50,9 +50,10 @@ public class CeiFluids {
     public static final FluidEntry<SimpleFlowableFluid.Flowing> INK = REGISTRATE
             .fluid("ink", INK_STILL_RL, INK_FLOW_RL)
             .fluidProperties(p -> p.levelDecreasePerBlock(2)
-                    .tickRate(25).blastResistance(100F))
+                    .tickRate(25)
+                    .blastResistance(100F))
             .source(SimpleFlowableFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
-            .tag(CeiTags.FluidTag.INK.tag())
+            .tag(CeiTags.FluidTag.INK.tag)
             .bucket()
             .build()
             .register();

@@ -13,6 +13,7 @@ import plus.dragons.createdragonlib.init.FillCreateItemGroupEvent;
 import plus.dragons.createdragonlib.init.SafeRegistrate;
 import plus.dragons.createdragonlib.lang.Lang;
 import plus.dragons.createdragonlib.lang.LangFactory;
+import plus.dragons.createdragonlib.tag.TagGen;
 import plus.dragons.createenchantmentindustry.content.contraptions.fluids.OpenEndedPipeEffects;
 import plus.dragons.createenchantmentindustry.entry.CeiBlockEntities;
 import plus.dragons.createenchantmentindustry.entry.CeiBlocks;
@@ -55,6 +56,7 @@ public class EnchantmentIndustry implements ModInitializer, DataGeneratorEntrypo
         CeiFluids.registerLavaReaction();
         OpenEndedPipeEffects.register();
         CeiBlockEntities.registerTransfer();
+        new TagGen.Builder(REGISTRATE).addItemTagFactory(CeiTags::genItemTag).build();
     }
 
     @Override
