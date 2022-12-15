@@ -15,12 +15,9 @@ import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.block.ITE;
 import com.simibubi.create.foundation.tileEntity.ComparatorUtil;
 import com.simibubi.create.foundation.utility.Lang;
-import com.simibubi.create.foundation.utility.VecHelper;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.StringRepresentable;
-import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,7 +36,6 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import plus.dragons.createenchantmentindustry.content.contraptions.fluids.experience.ExperienceFluid;
 import plus.dragons.createenchantmentindustry.entry.CeiBlockEntities;
 import plus.dragons.createenchantmentindustry.entry.CeiItems;
 
@@ -74,7 +70,11 @@ public class BlazeEnchanterBlock extends HorizontalDirectionalBlock implements I
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-        ITE.onRemove(state,level,pos,newState);
+        if (!state.hasBlockEntity() || state.getBlock() == newState.getBlock())
+            return;
+        ((BlazeEnchanterBlockEntity) level.getBlockEntity(pos)).destroy();
+        level.removeBlockEntity(pos);
+        // ITE.onRemove(state,level,pos,newState);
     }
 
     @Override

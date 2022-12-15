@@ -99,7 +99,7 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
         behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels()
                 .setInsertionHandler(this::tryInsertingFromSide));
         behaviours.add(internalTank = FilteringFluidTankBehaviour
-                .single((variant, amount) -> variant.getFluid().is(CeiTags.FluidTag.BLAZE_ENCHANTER_INPUT.tag)),
+                .single((variant, amount) -> variant.getFluid().is(CeiTags.FluidTag.BLAZE_ENCHANTER_INPUT.tag),
                         this, CeiConfigs.SERVER.blazeEnchanterTankCapacity.get())
                 .whenFluidUpdates(() -> {
                     var fluid = internalTank.getPrimaryHandler().getFluid().getFluid();
@@ -439,15 +439,15 @@ public class BlazeEnchanterBlockEntity extends SmartTileEntity implements IHaveG
     }
 
     @Override
-    public void invalidate() {
-        super.invalidate();
+    public void setRemoved() {
+        super.setRemoved();
         for (LazyOptional<EnchantingItemHandler> lazyOptional : itemHandlers.values())
             lazyOptional.invalidate();
     }
 
-    @Override
+    // @Override
     public void destroy() {
-        super.destroy();
+        // super.destroy();
         if (level instanceof ServerLevel serverLevel) {
             ItemStack heldItemStack = getHeldItemStack();
             var pos = getBlockPos();

@@ -184,9 +184,9 @@ public class PrinterBlockEntity extends SmartTileEntity implements IHaveGoggleIn
                 .getFluid();
     }
 
-    @Override
+    // @Override
     public void destroy() {
-        super.destroy();
+        // super.destroy();
         if (level instanceof ServerLevel serverLevel) {
             ItemStack heldItemStack = copyTarget;
             var pos = getBlockPos();

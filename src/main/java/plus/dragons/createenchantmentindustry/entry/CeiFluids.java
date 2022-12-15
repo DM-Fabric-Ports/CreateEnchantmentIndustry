@@ -64,7 +64,7 @@ public class CeiFluids {
     public static void handleInkEffect(LivingEntity entity) {
         if (entity.tickCount % 20 != 0)
             return;
-        if (entity.isEyeInFluid(CeiTags.FluidTag.INK.tag())) {
+        if (entity.isEyeInFluid(CeiTags.FluidTag.INK.tag)) {
             entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0, true, false, false));
         }
     }

@@ -393,15 +393,15 @@ public class DisenchanterBlockEntity extends SmartTileEntity implements IHaveGog
     }
 
     @Override
-    public void invalidate() {
-        super.invalidate();
+    public void setRemoved() {
+        super.setRemoved();
         for (LazyOptional<DisenchanterItemHandler> lazyOptional : itemHandlers.values())
             lazyOptional.invalidate();
     }
 
-    @Override
+    // @Override
     public void destroy() {
-        super.destroy();
+        // super.destroy();
         if (level instanceof ServerLevel serverLevel) {
             ItemStack heldItemStack = getHeldItemStack();
             if(!heldItemStack.isEmpty())
