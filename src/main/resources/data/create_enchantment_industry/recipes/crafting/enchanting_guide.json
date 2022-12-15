@@ -2,7 +2,7 @@
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
     {
-      "tag": "c:plates/obsidian"
+      "tag": "c:obsidian_plates"
     },
     {
       "item": "minecraft:book"

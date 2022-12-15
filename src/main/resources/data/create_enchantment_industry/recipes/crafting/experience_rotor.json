@@ -7,7 +7,7 @@
   ],
   "key": {
     "Z": {
-      "tag": "c:ingots/zinc"
+      "tag": "c:zinc_plates"
     },
     "E": {
       "item": "create:experience_nugget"
